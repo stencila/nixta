@@ -19,6 +19,7 @@ let
 
   customPkgs = {
     psmc = callPackage ../applications/science/biology/psmc {};
+    pypi2nix = callPackage ../development/tools/pypi2nix {};
   };
 
   self = pkgs // languagesModules // customPkgs;
