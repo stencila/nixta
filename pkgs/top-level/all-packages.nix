@@ -6,7 +6,13 @@ let
   pinPkgs = import (fetchTarball nixUrl) { inherit system; };
   callPackage = pkgs.lib.callPackageWith (pkgs // pkgs.xlibs // self);
 
-  pkgs = pinPkgs;
+  pkgs = pinPkgs // {
+    stdenv = pinPkgs.stdenv.overrideDerivation (attrs: attrs // {
+      lib = attrs.lib // {
+        maintainers = import ../../lib/maintainers.nix {};
+      };
+    });
+  };
 
   languagesModules = {
   };
