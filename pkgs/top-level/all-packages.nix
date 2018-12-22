@@ -18,6 +18,7 @@ let
   };
 
   customPkgs = {
+    psmc = callPackage ../applications/science/biology/psmc {};
   };
 
   self = pkgs // languagesModules // customPkgs;
