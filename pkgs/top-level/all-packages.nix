@@ -14,7 +14,15 @@ let
     });
   };
 
+  pythonGenerated = (import ../development/python-modules/requirements.nix { inherit pkgs; }).packages;
+  python37Packages = pkgs.python37Packages // pythonGenerated;
+  pythonPackages = python37Packages;
+  python = pkgs.python3;
+
   languagesModules = {
+    python = python;
+    pythonPackages = pythonPackages;
+    python37Packages = python37Packages;
   };
 
   customPkgs = {
