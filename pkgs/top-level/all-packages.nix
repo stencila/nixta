@@ -14,12 +14,17 @@ let
     });
   };
 
+  rPackages = callPackage ../development/r-modules {
+    overrides = (p: {}) pkgs;
+  };
+
   pythonGenerated = (import ../development/python-modules/requirements.nix { inherit pkgs; }).packages;
   python37Packages = pkgs.python37Packages // pythonGenerated;
   pythonPackages = python37Packages;
   python = pkgs.python3;
 
   languagesModules = {
+    rPackages = rPackages;
     python = python;
     pythonPackages = pythonPackages;
     python37Packages = python37Packages;
