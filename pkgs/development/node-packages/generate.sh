@@ -1,6 +1,6 @@
 #!/usr/bin/env nix-shell
 #! nix-shell -i bash -p git nodePackages.node2nix
-#! nix-shell -I nixpkgs=https://github.com/NixOS/nixpkgs-channels/archive/nixos-18.09.tar.gz
+#! nix-shell -I nixpkgs=../../..
 
 set -eu -o pipefail
 

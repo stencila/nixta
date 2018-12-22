@@ -1,6 +1,6 @@
 #! /usr/bin/env nix-shell
 #! nix-shell -i bash -p wget parallel R rPackages.data_table
-#! nix-shell -I nixpkgs=https://github.com/NixOS/nixpkgs-channels/archive/nixos-18.09.tar.gz
+#! nix-shell -I nixpkgs=../../..
 
 Rscript generate-r-packages.R cran > cran-packages.nix.new
 Rscript generate-r-packages.R bioc > bioc-packages.nix.new
