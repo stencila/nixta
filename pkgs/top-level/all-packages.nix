@@ -2,9 +2,12 @@
 
 let
   nixVersion = "18.09";
-  nixUrl = "https://github.com/NixOS/nixpkgs/archive/${nixVersion}.tar.gz";
-  pinPkgs = import (fetchTarball nixUrl) { inherit system; };
-  callPackage = pkgs.lib.callPackageWith (pkgs // pkgs.xlibs // self);
+
+  pinPkgs = import (builtins.fetchTarball {
+    name = "nixos-${nixVersion}";
+    url = "https://github.com/NixOS/nixpkgs/archive/${nixVersion}.tar.gz";
+    sha256 = "1ib96has10v5nr6bzf7v8kw7yzww8zanxgw2qi1ll1sbv6kj6zpd";
+  }) { inherit system; };
 
   pkgs = pinPkgs // {
     stdenv = pinPkgs.stdenv.overrideDerivation (attrs: attrs // {
@@ -13,6 +16,8 @@ let
       };
     });
   };
+
+  callPackage = pkgs.lib.callPackageWith (pkgs // pkgs.xlibs // self);
 
   rPackages = callPackage ../development/r-modules {
     overrides = (p: {}) pkgs;
