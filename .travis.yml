@@ -2,6 +2,10 @@ language: node_js
 node_js:
   - 8
 
+cache:
+  directories:
+    - /nix
+
 before_install:
   # Install Nix
   - curl https://nixos.org/nix/install | sh
@@ -16,9 +20,9 @@ script:
   - make docs
 
   # Generate Nix files
-  # node2nix produces a lot of output on stderr which causes Travis to say
+  # node2nix produce a lot of output on stderr which causes Travis to say
   # "The job exceeded the maximum log length, and has been terminated."
-  # There does not appear to be an option to turn this off so redirect it to file.
+  # There does not appear to be a node2nix option to turn this off.
   # Travis will also kill a build if no output is received for 10 mins, so
   # use `travis_wait` to ensure that does not happen.
   - (cd nix/pkgs/development/node-packages; travis_wait 60 ./generate.sh)
