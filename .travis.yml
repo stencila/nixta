@@ -7,6 +7,6 @@ script:
   # There does not appear to be an option to turn this off so redirect it to file.
   # Travis will also kill a build if no output is received for 10 mins, so
   # use `travis_wait` to ensure that does not happen.
-  - (cd pkgs/development/node-packages; travis_wait 60 ./generate.sh)
-  - (cd pkgs/development/python-modules; ./generate.sh)
-  - (cd pkgs/development/r-modules; ./generate.sh)
+  - (cd nix/pkgs/development/node-packages; travis_wait 60 ./generate.sh)
+  - (cd nix/pkgs/development/python-modules; ./generate.sh)
+  - (cd nix/pkgs/development/r-modules; ./generate.sh)
