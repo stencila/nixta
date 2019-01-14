@@ -25,9 +25,9 @@ script:
   # There does not appear to be a node2nix option to turn this off.
   # Travis will also kill a build if no output is received for 10 mins, so
   # use `travis_wait` to ensure that does not happen.
-  - (cd nix/pkgs/development/node-packages; travis_wait 60 ./generate.sh)
-  - (cd nix/pkgs/development/python-modules; ./generate.sh)
-  - (cd nix/pkgs/development/r-modules; ./generate.sh)
+  #- (cd nix/pkgs/development/node-packages; travis_wait 60 ./generate.sh)
+  #- (cd nix/pkgs/development/python-modules; ./generate.sh)
+  #- (cd nix/pkgs/development/r-modules; ./generate.sh)
 
 # Upload test coverage to codecov
 # See https://docs.codecov.io/v5.0.0/docs/about-the-codecov-bash-uploader
