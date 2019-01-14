@@ -5,10 +5,13 @@ node_js:
 before_install:
   # Install Nix
   - curl https://nixos.org/nix/install | sh
+  - . /home/travis/.nix-profile/etc/profile.d/nix.sh
 
+# Do linting, coverage, and build docs (to upload to Github pages)
 script:
-  # Do linting, coverage, and build docs (to upload to Github pages)
   - make lint
+  # Do an update to populate db prior to testing
+  - npx ts-node src/cli.ts update nixos-18.09
   - make cover
   - make docs
 
