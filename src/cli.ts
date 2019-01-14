@@ -121,6 +121,7 @@ yargs
       .env('NIXSTER')
       .option('long', {
         describe: 'Show long form description',
+        alias: 'l',
         type: 'boolean',
         default: false
       })
@@ -167,7 +168,7 @@ yargs
         describe: 'Name of the environment',
         type: 'string'
       })
-      .positional('pure', {
+      .option('pure', {
         describe: 'Should the environment be pure (no host executables available)?',
         alias: 'p',
         type: 'boolean'
@@ -191,6 +192,7 @@ yargs
       .env('NIXSTER')
       .option('build', {
         describe: 'Should the image be built?',
+        alias: 'b',
         type: 'boolean',
         default: false
       })
@@ -330,6 +332,7 @@ yargs
       })
       .option('type', {
         describe: 'The type of package e.g. r-package e.g. python-package',
+        alias: 't',
         type: 'string'
       })
     outputOptions(yargs)
