@@ -11,7 +11,7 @@ import yaml from 'js-yaml'
 import * as nix from './nix'
 
 // The home directory for environments
-const HOME = path.dirname(__dirname)
+let home = path.join(path.dirname(__dirname), 'envs')
 
 /**
  * A computational environment
@@ -66,10 +66,20 @@ export default class Environment {
   }
 
   /**
+   * Get or set the ome directory for environments
+   *
+   * @param value Value for home directory
+   */
+  static home (value?: string): string {
+    if (value) home = value
+    return home
+  }
+
+  /**
    * Path to the environment specification files
    */
   path (): string {
-    return path.join(HOME, 'envs', this.name) + '.yaml'
+    return path.join(Environment.home(), this.name) + '.yaml'
   }
 
   /**
@@ -89,7 +99,7 @@ export default class Environment {
     if (this.adds && this.adds.length === 0) this.adds = undefined
     if (this.removes && this.removes.length === 0) this.removes = undefined
 
-    mkdirp.sync(path.join(HOME, 'envs'))
+    mkdirp.sync(Environment.home())
     const yml = yaml.safeDump(this, { skipInvalid: true })
     fs.writeFileSync(this.path(), yml)
     return this
@@ -132,7 +142,7 @@ export default class Environment {
    * List the environments on this machine
    */
   static async envs (): Promise<Array<any>> {
-    const names = glob.sync('*.yaml', { cwd: path.join(HOME, 'envs') }).map(file => file.slice(0, -5))
+    const names = glob.sync('*.yaml', { cwd: Environment.home() }).map(file => file.slice(0, -5))
     const envs = []
     for (let name of names) {
       const env = new Environment(name)
@@ -190,7 +200,10 @@ export default class Environment {
     }
     if (this.removes) {
       for (let pkg of this.removes) {
-        // TODO
+        let index = pkgs.indexOf(pkg)
+        if (index > -1) {
+          pkgs.slice(index, 1)
+        }
       }
     }
     return pkgs
