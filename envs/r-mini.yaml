@@ -1,0 +1,7 @@
+'@context': 'https://stenci.la/schema/v1/'
+type: Environment
+name: r-mini
+extends:
+  - r
+adds:
+  - r-tidyverse

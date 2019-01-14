@@ -1,0 +1,7 @@
+'@context': 'https://stenci.la/schema/v1/'
+type: Environment
+name: multi-mini
+extends:
+  - nodejs-mini
+  - python-mini
+  - r-mini

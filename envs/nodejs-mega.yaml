@@ -1,0 +1,5 @@
+'@context': 'https://stenci.la/schema/v1/'
+type: Environment
+name: nodejs-mega
+extends:
+  - nodejs-mini

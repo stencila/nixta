@@ -1,0 +1,7 @@
+'@context': 'https://stenci.la/schema/v1/'
+type: Environment
+extends:
+  - python
+adds:
+  - python-pandas
+  - python-matplotlib
