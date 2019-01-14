@@ -1,0 +1,5 @@
+/*.sqlite3
+/coverage
+/dist
+/docs
+/node_modules
