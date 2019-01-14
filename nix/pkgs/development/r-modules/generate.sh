@@ -1,6 +1,6 @@
 #! /usr/bin/env nix-shell
 #! nix-shell -i bash -p wget parallel R rPackages.data_table
-#! nix-shell -I nixpkgs=../../..
+#! nix-shell -I nixpkgs=../../../..
 
 # Generate new `*-packages.nix` files for each R package repository
 # in the following list. 

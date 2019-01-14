@@ -1,6 +1,6 @@
 #! /usr/bin/env nix-shell
 #! nix-shell -i bash -p glibcLocales python37 nix-prefetch-github pypi2nix
-#! nix-shell -I nixpkgs=../../..
+#! nix-shell -I nixpkgs=../../../..
 
 export LANG=en_US.UTF-8
 pypi2nix -v -V 3.7 -s numpy -r requirements.txt \
