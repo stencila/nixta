@@ -1,5 +1,7 @@
 '@context': 'https://stenci.la/schema/v1/'
 type: Environment
 name: python
+description: |
+  An environment containing only Python, the interpreted, high-level, general-purpose programming language.
 adds:
   - python

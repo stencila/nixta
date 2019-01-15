@@ -1,5 +1,7 @@
 '@context': 'https://stenci.la/schema/v1/'
 type: Environment
 name: r
+description: |
+  An environment containing only R, the programming language and free software environment for statistical computing and graphics.
 adds:
   - r

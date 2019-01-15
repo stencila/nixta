@@ -146,12 +146,11 @@ export default class Environment {
     const envs = []
     for (let name of names) {
       const env = new Environment(name)
-      envs.push({
-        name,
-        description: env.description,
+      envs.push(Object.assign({}, env, {
         path: env.path(),
+        built: await nix.built(name),
         location: await nix.location(name)
-      })
+      }))
     }
     return envs
   }
@@ -317,7 +316,7 @@ export default class Environment {
   /**
    * Run a Docker container for this environment
    */
-  async dockerRun () {
+  async dockerRun (command: string = 'sh') {
     const location = await nix.location(this.name)
     await spawn('docker', [
       'run', '--interactive', '--tty', '--rm',
@@ -331,7 +330,10 @@ export default class Environment {
       // shell utilities (lkike ls and uname) that are good for debugging but also sometimes
       // required for things like R
       'alpine'
-    ], {
+    ].concat(
+      // Command to execute in the container
+      command.split(' ')
+    ), {
       stdio: 'inherit'
     })
   }
