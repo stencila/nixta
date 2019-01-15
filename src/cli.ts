@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 /**
  * Module for command line interface (CLI)
  *
@@ -47,10 +49,27 @@ yargs
   }, async (argv: any) => {
     const envs = await Environment.envs()
     output(envs, argv, (envs: any) => {
-      return envs.map((env: any) => {
-        const descr = env.description ? env.description : ''
-        return sprintf('%-40s %-20s %s', chalk.blue.bold(env.name), descr, chalk.gray(env.location))
-      }).join('\n')
+      const layout = '%-15s %-40s %-80s'
+      const header = sprintf(layout, chalk.gray('Ready'), chalk.gray('Name'), chalk.gray('Description')) + '\n'
+      return header + 
+        envs.map((env: any) => {
+          const icon = env.built ? chalk.green('✓') : chalk.yellow('⚪')
+          const name = chalk.blue(env.name)
+          let descr = env.description
+          if (!descr) {
+            if (env.extends && env.extends.length) {
+              descr = `Extends ${env.extends.join(', ')}.`
+            }
+            if (env.adds && env.adds.length) {
+              descr = `Adds ${env.adds.length} packages.`
+            }
+            if (env.removes && env.removes.length) {
+              descr = `Removes ${env.removes.length} packages.`
+            }
+          }
+          descr = ellipsize(descr, 80)
+          return sprintf(layout, icon, name, descr)
+        }).join('\n')
     })
   })
 

@@ -1,7 +1,7 @@
 /**
  * Nixster's interface to Nix.
  */
-
+import fs from 'fs'
 import path from 'path'
 
 import Database from 'better-sqlite3'
@@ -262,12 +262,23 @@ export async function search (term: string, type: string = '', limit: number = 1
 }
 
 /**
+ * Has the environment been built yet?
+ *
+ * @param env The environment name
+ */
+export async function built (env: string): Promise<boolean> {
+  return (await location(env)).length > 0
+}
+
+/**
  * Get the location of an environment within the Nix store
  *
  * @param env The environment name
  */
 export async function location (env: string): Promise<string> {
-  const readlink = await spawn('readlink', ['-f', path.join(profiles, env)])
+  const profile = path.join(profiles, env)
+  if (!fs.existsSync(profile)) return ''
+  const readlink = await spawn('readlink', ['-f', profile])
   return readlink.toString().trim()
 }
 
