@@ -1,6 +1,6 @@
 {
   "name": "@stencila/nixster",
-  "version": "0.1.0",
+  "version": "18.12.0",
   "description": "A package and environment manager built on top of Nix",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -46,7 +46,6 @@
     "all-contributors-cli": "^5.7.0",
     "jest": "^23.6.0",
     "markdown-toc": "^1.2.0",
-    "semantic-release-cli": "^4.1.0",
     "ts-jest": "^23.10.5",
     "ts-node": "^7.0.1",
     "tslint": "^5.12.0",
