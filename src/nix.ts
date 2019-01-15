@@ -28,7 +28,15 @@ export function semver (version: string): string {
   return match ? sprintf('%05i.%05i.%05i%s', match[1], match[3] || 0, match[5] || 0, match[6] || '') : version
 }
 // Register function in the database
-db.function('semver', semver)
+try {
+  db.function('semver', semver)
+} catch(error) {
+  // The following error get's thown sometimes (maybe if the function
+  // has already been registered?)
+  if (error.message !== 'Expected first argument to be a string') {
+    throw error
+  }
+}
 
 // Currently we're putting generate Nix profiles in the /nix directory.
 // This is somewhat arbitrary.
