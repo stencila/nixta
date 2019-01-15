@@ -1,5 +1,7 @@
 /*.sqlite3
 /coverage
+/demo-magic.sh
+/demo.cast
 /dist
 /docs
 /node_modules
