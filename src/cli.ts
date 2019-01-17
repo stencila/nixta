@@ -91,7 +91,7 @@ yargs
         type: 'array'
       })
       .option('removes', {
-        describe: 'Remove packages to environment',
+        describe: 'Remove packages from environment',
         alias: 'r',
         type: 'array'
       })
@@ -406,7 +406,7 @@ function output (value: any, argv: any = {}, prettifier?: (value: any) => string
  * Add output options to a command.
  *
  * The aim of this approach is to have a consistent
- * and convieient way for users to be able to specify
+ * and convenient way for users to be able to specify
  * the output format across commands.
  *
  * Formats can be specified explicitly e.g.
@@ -459,7 +459,7 @@ function outputOptions (yargs: any) {
  * Create a diagnostic message for the user
  *
  * @param message Message to display
- * @param emoji Emjoi to prefix the display
+ * @param emoji Emoji to prefix the display
  */
 function diag (message: string, emoji: string) {
   if (process.stderr.isTTY && emoji) process.stderr.write(emoji + '  ')
