@@ -201,6 +201,30 @@ yargs
     }
   })
 
+  .command('enter <name> [command..]', 'Enter a shell within the environment', (yargs: any) => {
+    yargs
+      .positional('name', {
+        describe: 'Name of the environment',
+        type: 'string'
+      })
+      .positional('command', {
+        describe: 'An initial command to execute in the shell e.g. `R` or `python`',
+        type: 'string'
+      })
+      .option('pure', {
+        describe: 'Should the environment be pure (no host executables available)?',
+        alias: 'p',
+        type: 'boolean',
+        default: true
+      })
+  }, async (argv: any) => {
+    try {
+      await new Environment(argv.name).enter(argv.command.join(' '), argv.pure)
+    } catch (err) {
+      error(err)
+    }
+  })
+
   // TODO instead of a sperate command, --docker should be an option for the `build`, `within` and `enter` commands
   .command('dockerize [name] [command]', 'Containerize the environment using Docker', (yargs: any) => {
     yargs

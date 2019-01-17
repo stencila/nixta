@@ -1,11 +1,14 @@
 import fs from 'fs'
+import os from 'os'
 import path from 'path'
 
-// @ts-ignore
-import spawn from 'await-spawn'
+import chalk from 'chalk'
 import del from 'del'
 import glob from 'glob'
 import mkdirp from 'mkdirp'
+import * as pty from 'node-pty'
+// @ts-ignore
+import spawn from 'await-spawn'
 import yaml from 'js-yaml'
 
 import * as nix from './nix'
@@ -289,28 +292,96 @@ export default class Environment {
   }
 
   /**
-   * Execute a bash command within the environment
+   * Create variables for an environment.
+   * 
+   * This method is used in several other metho
+   * e.g. `within`, `enter`
    *
-   * A 'pure' shell will only hav available the executables that
+   * A 'pure' environment will only have available the executables that
    * were exlicitly installed into the environment
+   *
+   * @param pure Should the shell that this command is executed in be 'pure'?
+   */
+  async vars (pure: boolean = false) {
+    const location = await nix.location(this.name)
+    
+    let PATH = `${location}/bin:${location}/sbin`
+    if (!pure) PATH += ':' + process.env.PATH
+
+    const R_LIBS_SITE = `${location}/library`
+    
+    return {
+      PATH,
+      R_LIBS_SITE
+    }
+  }
+
+  /**
+   * Execute a bash command within the environment
    *
    * @param command The command to execute
    * @param pure Should the shell that this command is executed in be 'pure'?
    */
   async within (command: string, pure: boolean = false) {
-    const location = await nix.location(this.name)
-    let path = `${location}/bin:${location}/sbin`
-    if (!pure) path += ':' + process.env.PATH
-    // Get the path to bash because it may not be available in the PATH of
-    // a pure shell
-    let bash = await spawn('which', ['bash'])
-    await spawn(bash.toString().trim(), ['-c', command], {
+    // Get the path to bash because it may not be available in 
+    // the PATH of a pure shell
+    let shell = await spawn('which', ['bash'])
+    shell = shell.toString().trim()
+    await spawn(shell, ['-c', command], {
       stdio: 'inherit',
-      env: {
-        PATH: path,
-        R_LIBS_SITE: `${location}/library`
-      }
+      env: await this.vars()
     })
+  }
+
+  /**
+   * Enter the a shell within the environment
+   * 
+   * @param command An initial command to execute in the shell e.g. R or python
+   * @param pure Should the shell be 'pure'?
+   */
+  async enter (command: string = '', pure: boolean = true) {
+    const shellName = os.platform() === 'win32' ? 'powershell.exe' : 'bash'
+    const shellArgs = ['--noprofile', '--norc']
+    
+    let shellPath = await spawn('which', [shellName])
+    shellPath = shellPath.toString().trim()
+    
+    let vars = await this.vars(pure)
+    vars = Object.assign(vars, {
+      PS1: '☆ ' + chalk.green.bold(this.name) + ':' + chalk.blue('\\w') + '$ '
+    })
+
+    const shellProcess = pty.spawn(shellPath, shellArgs, {
+      name: 'xterm-color',
+      cols: 120,
+      rows: 30,
+      env: vars
+    })
+    shellProcess.on('data', data => {
+      process.stdout.write(data)
+    })
+
+    // To prevent echoing of input set stdin to raw mode (see https://github.com/Microsoft/node-pty/issues/78)
+    // https://nodejs.org/api/tty.html: "When in raw mode, input is always available character-by-character, 
+    // not including modifiers. Additionally, all special processing of characters 
+    // by the terminal is disabled, including echoing input characters. Note that CTRL+C 
+    // will no longer cause a SIGINT when in this mode."
+    // @ts-ignore
+    process.stdin.setRawMode(true)
+
+    // Write the result through to the shell process
+    // Capture Ctrl+D for special handling:
+    //   - if in the top level shell process then exit this process
+    //   - otherwise, pass on the process e.g. node, Rrm 
+    const ctrlD = Buffer.from([4])
+    process.stdin.on('data', data => {
+      if (data.equals(ctrlD) && shellProcess.process == shellPath) {
+        process.exit(1)
+      }
+      shellProcess.write(data)
+    })
+
+    if (command) shellProcess.write(command + '\r')
   }
 
   /**
