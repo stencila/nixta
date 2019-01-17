@@ -51,7 +51,7 @@ yargs
     output(envs, argv, (envs: any) => {
       const layout = '%-15s %-40s %-80s'
       const header = sprintf(layout, chalk.gray('Ready'), chalk.gray('Name'), chalk.gray('Description')) + '\n'
-      return header + 
+      return header +
         envs.map((env: any) => {
           const icon = env.built ? chalk.green('✓') : chalk.yellow('⚪')
           const name = chalk.blue(env.name)

@@ -294,7 +294,7 @@ export default class Environment {
 
   /**
    * Create variables for an environment.
-   * 
+   *
    * This method is used in several other metho
    * e.g. `within`, `enter`
    *
@@ -305,12 +305,12 @@ export default class Environment {
    */
   async vars (pure: boolean = false) {
     const location = await nix.location(this.name)
-    
+
     let PATH = `${location}/bin:${location}/sbin`
     if (!pure) PATH += ':' + process.env.PATH
 
     const R_LIBS_SITE = `${location}/library`
-    
+
     return {
       PATH,
       R_LIBS_SITE
@@ -324,7 +324,7 @@ export default class Environment {
    * @param pure Should the shell that this command is executed in be 'pure'?
    */
   async within (command: string, pure: boolean = false) {
-    // Get the path to bash because it may not be available in 
+    // Get the path to bash because it may not be available in
     // the PATH of a pure shell
     let shell = await spawn('which', ['bash'])
     shell = shell.toString().trim()
@@ -336,14 +336,14 @@ export default class Environment {
 
   /**
    * Enter the a shell within the environment
-   * 
+   *
    * @param command An initial command to execute in the shell e.g. R or python
    * @param pure Should the shell be 'pure'?
    */
   async enter (command: string = '', pure: boolean = true) {
     const shellName = os.platform() === 'win32' ? 'powershell.exe' : 'bash'
     const shellArgs = ['--noprofile']
-    
+
     // Path to the shell executable. We need to do this
     // because the environment may not actually have any shell
     // in it, in which case, when using `pure` a shell won't be available.
@@ -359,7 +359,7 @@ export default class Environment {
     const tempRcFile = tmp.fileSync()
     fs.writeFileSync(tempRcFile.name, `alias nixster="${nixsterPath.toString().trim()}"\n`)
     shellArgs.push('--rcfile', tempRcFile.name)
-    
+
     // Environment variables
     let vars = await this.vars(pure)
     vars = Object.assign(vars, {
@@ -381,9 +381,9 @@ export default class Environment {
     })
 
     // To prevent echoing of input set stdin to raw mode (see https://github.com/Microsoft/node-pty/issues/78)
-    // https://nodejs.org/api/tty.html: "When in raw mode, input is always available character-by-character, 
-    // not including modifiers. Additionally, all special processing of characters 
-    // by the terminal is disabled, including echoing input characters. Note that CTRL+C 
+    // https://nodejs.org/api/tty.html: "When in raw mode, input is always available character-by-character,
+    // not including modifiers. Additionally, all special processing of characters
+    // by the terminal is disabled, including echoing input characters. Note that CTRL+C
     // will no longer cause a SIGINT when in this mode."
     // @ts-ignore
     process.stdin.setRawMode(true)
@@ -391,10 +391,10 @@ export default class Environment {
     // Write the result through to the shell process
     // Capture Ctrl+D for special handling:
     //   - if in the top level shell process then exit this process
-    //   - otherwise, pass on the process e.g. node, Rrm 
+    //   - otherwise, pass on the process e.g. node, Rrm
     const ctrlD = Buffer.from([4])
     process.stdin.on('data', data => {
-      if (data.equals(ctrlD) && shellProcess.process == shellPath) {
+      if (data.equals(ctrlD) && shellProcess.process === shellPath) {
         process.exit(1)
       }
       shellProcess.write(data)
