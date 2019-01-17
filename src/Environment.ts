@@ -9,6 +9,7 @@ import mkdirp from 'mkdirp'
 import * as pty from 'node-pty'
 // @ts-ignore
 import spawn from 'await-spawn'
+import tmp from 'tmp'
 import yaml from 'js-yaml'
 
 import * as nix from './nix'
@@ -341,13 +342,31 @@ export default class Environment {
    */
   async enter (command: string = '', pure: boolean = true) {
     const shellName = os.platform() === 'win32' ? 'powershell.exe' : 'bash'
-    const shellArgs = ['--noprofile', '--norc']
+    const shellArgs = ['--noprofile']
     
+    // Path to the shell executable. We need to do this
+    // because the environment may not actually have any shell
+    // in it, in which case, when using `pure` a shell won't be available.
     let shellPath = await spawn('which', [shellName])
     shellPath = shellPath.toString().trim()
+
+    // Inject Nixster into the environment as an alias so we can use it
+    // there without polluting the environment with additional binaries.
+    // During development you'll need to use ---pure=false so that
+    // node is available to run Nixster. In production, when a user
+    // has installed a binary, this shouldn't be necessary
+    let nixsterPath = await spawn('which', ['nixster'])
+    const tempRcFile = tmp.fileSync()
+    fs.writeFileSync(tempRcFile.name, `alias nixster="${nixsterPath.toString().trim()}"\n`)
+    shellArgs.push('--rcfile', tempRcFile.name)
     
+    // Environment variables
     let vars = await this.vars(pure)
     vars = Object.assign(vars, {
+      // Let Nixster know which environment we're in.
+      NIXSTER_ENV: this.name,
+      // Customise the bash prompt so that the user know that they are in
+      // a Nixster environment and which one.
       PS1: '☆ ' + chalk.green.bold(this.name) + ':' + chalk.blue('\\w') + '$ '
     })
 
