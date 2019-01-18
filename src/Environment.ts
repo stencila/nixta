@@ -1,6 +1,7 @@
 import fs from 'fs'
 import os from 'os'
-import path from 'path'
+import path, { resolve } from 'path'
+import stream from 'stream'
 
 import chalk from 'chalk'
 import del from 'del'
@@ -340,7 +341,7 @@ export default class Environment {
    * @param command An initial command to execute in the shell e.g. R or python
    * @param pure Should the shell be 'pure'?
    */
-  async enter (command: string = '', pure: boolean = true) {
+  async enter (command: string = '', pure: boolean = true, stdin: stream.Readable = process.stdin, stdout: stream.Writable = process.stdout) {
     const shellName = os.platform() === 'win32' ? 'powershell.exe' : 'bash'
     const shellArgs = ['--noprofile']
 
@@ -377,7 +378,7 @@ export default class Environment {
       env: vars
     })
     shellProcess.on('data', data => {
-      process.stdout.write(data)
+      stdout.write(data)
     })
 
     // To prevent echoing of input set stdin to raw mode (see https://github.com/Microsoft/node-pty/issues/78)
@@ -386,16 +387,19 @@ export default class Environment {
     // by the terminal is disabled, including echoing input characters. Note that CTRL+C
     // will no longer cause a SIGINT when in this mode."
     // @ts-ignore
-    process.stdin.setRawMode(true)
+    if (stdin.setRawMode) stdin.setRawMode(true)
 
     // Write the result through to the shell process
     // Capture Ctrl+D for special handling:
     //   - if in the top level shell process then exit this process
     //   - otherwise, pass on the process e.g. node, Rrm
     const ctrlD = Buffer.from([4])
-    process.stdin.on('data', data => {
+    stdin.on('data', data => {
       if (data.equals(ctrlD) && shellProcess.process === shellPath) {
-        process.exit(1)
+        shellProcess.kill('SIGKILL')
+        // @ts-ignore
+        if (stdout.isTTY) process.exit()
+        else resolve()
       }
       shellProcess.write(data)
     })
