@@ -1,7 +1,13 @@
 '@context': 'https://stenci.la/schema/v1/'
 type: Environment
 name: r
-description: |
-  An environment containing only R, the programming language and free software environment for statistical computing and graphics.
+description: >
+  An environment containing R, the programming language and free software
+  environment for statistical computing and graphics.
+comments: >
+  This environment includes `coreutils` because when running R in a pure 
+  environment without that package you get errors about `uname` and `rm` missing
+  (and possibly others?)
 adds:
   - r
+  - coreutils
