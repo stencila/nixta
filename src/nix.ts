@@ -30,7 +30,7 @@ export function semver (version: string): string {
 // Register function in the database
 try {
   db.function('semver', semver)
-} catch(error) {
+} catch (error) {
   // The following error get's thown sometimes (maybe if the function
   // has already been registered?)
   if (error.message !== 'Expected first argument to be a string') {
