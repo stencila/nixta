@@ -3,7 +3,7 @@ nix: 2.1.3
 script:
 # - "(cd pkgs/development/node-packages; travis_wait 60 ./generate.sh)"
 # - "(cd pkgs/development/python-modules; ./generate.sh)"
-# - "(cd pkgs/development/r-modules; ./generate.sh)"
+- "(cd pkgs/development/r-modules; ./generate.sh)"
 - ./deploy.sh
 branches:
   only:
