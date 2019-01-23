@@ -311,9 +311,30 @@ export default class Environment {
 
   /**
    * Build this environment
+   * 
+   * @param docker Also build a Docker container for the environment?
    */
-  async build (): Promise<Environment> {
+  async build (docker: boolean = false): Promise<Environment> {
     await nix.install(this.name, this.pkgs(), true)
+
+    if (docker) {
+      // TODO: complete implementation of this, using these files...
+      const requisites = await nix.requisites(this.name)
+      const dockerignore = `*\n${requisites.map(req => '!' + req).join('\n')}`
+      console.log(dockerignore)
+  
+      // The Dockerfile does essentially the same as the `docker run` command
+      // generated above in `dockerRun`...
+      const location = await nix.location(this.name)
+      const dockerfile = `
+  FROM alpine
+  ENV PATH ${location}/bin:${location}/sbin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+  ENV R_LIBS_SITE=${location}/library
+  COPY /nix/store /nix/store
+      `
+      console.log(dockerfile)
+    }
+
     return this.write()
   }
 
@@ -482,25 +503,4 @@ export default class Environment {
 
     if (platform === Platform.UNIX && command) shellProcess.write(command + '\r')
   }
-
-  /**
-   * Build a Docker container for this environment
-   */
-  async dockerBuild () {
-    const requisites = await nix.requisites(this.name)
-    const dockerignore = `*\n${requisites.map(req => '!' + req).join('\n')}`
-    console.log(dockerignore)
-
-    // The Dockerfile does essentially the same as the `docker run` command
-    // generated above in `dockerRun`...
-    const location = await nix.location(this.name)
-    const dockerfile = `
-FROM alpine
-ENV PATH ${location}/bin:${location}/sbin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-ENV R_LIBS_SITE=${location}/library
-COPY /nix/store /nix/store
-    `
-    console.log(dockerfile)
-  }
-
 }

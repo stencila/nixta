@@ -176,8 +176,14 @@ yargs
         type: 'string'
       })
       .env('NIXSTER')
+      .option('docker', {
+        describe: 'Also build a Docker container for the environment?',
+        type: 'boolean',
+        alias: 'd',
+        default: false
+      })
   }, async (argv: any) => {
-    await new Environment(argv.name).build()
+    await new Environment(argv.name).build(argv.docker)
     info(`Environment "${argv.name}" built`)
   })
 
@@ -237,26 +243,6 @@ yargs
     } catch (err) {
       error(err)
     }
-  })
-
-  // TODO instead of a sperate command, --docker should be an option for the `build`, `within` and `enter` commands
-  .command('dockerize [name] [command]', 'Containerize the environment using Docker', (yargs: any) => {
-    yargs
-      .positional('name', {
-        describe: 'Name of the environment',
-        alias: 'env',
-        type: 'string'
-      })
-      .env('NIXSTER')
-      .option('build', {
-        describe: 'Should the image be built?',
-        alias: 'b',
-        type: 'boolean',
-        default: false
-      })
-  }, async (argv: any) => {
-    const env = new Environment(argv.name)
-    await env.dockerBuild()
   })
 
   .command('add <pkgs..>', 'Add packages to the current environment', (yargs: any) => {
