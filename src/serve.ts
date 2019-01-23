@@ -3,7 +3,7 @@ import stream from 'stream'
 
 import express from 'express'
 
-import Environment from './Environment'
+import Environment, { SessionParameters, Platform } from './Environment'
 
 const app = express()
 const expressWs = require('express-ws')(app)
@@ -18,7 +18,7 @@ expressWs.app.ws('/shell', async (ws: any, req: any) => {
 
   // A pseudo stdin that receives data from the Websocket
   const stdin = new stream.PassThrough()
-  ws.on('message', (msg:any) => {
+  ws.on('message', (msg: any) => {
     stdin.write(msg)
   })
 
@@ -31,7 +31,12 @@ expressWs.app.ws('/shell', async (ws: any, req: any) => {
   })
 
   let env = new Environment('multi-mega')
-  await env.enter(undefined, true, stdin, stdout)
+
+  const sessionParameters = new SessionParameters()
+  sessionParameters.platform = Platform.DOCKER
+  sessionParameters.stdin = stdin
+  sessionParameters.stdout = stdout
+  await env.enter(sessionParameters)
 })
 
 app.listen(3000)

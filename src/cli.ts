@@ -14,7 +14,7 @@ import ellipsize from 'ellipsize'
 import yargs from 'yargs'
 import yaml from 'js-yaml'
 
-import Environment from './Environment'
+import Environment, { SessionParameters, Platform } from './Environment'
 import * as nix from './nix'
 
 const VERSION = require('../package').version
@@ -211,6 +211,12 @@ yargs
         describe: 'An initial command to execute in the shell e.g. `R` or `python`',
         type: 'string'
       })
+      .option('docker', {
+        describe: 'Enter into a Docker container for the environment?',
+        type: 'boolean',
+        alias: 'd',
+        default: false
+      })
       .option('pure', {
         describe: 'Should the environment be pure (no host executables available)?',
         alias: 'p',
@@ -219,7 +225,15 @@ yargs
       })
   }, async (argv: any) => {
     try {
-      await new Environment(argv.name).enter(argv.command.join(' '), argv.pure)
+      const env = new Environment(argv.name)
+
+      const sessionParameters = new SessionParameters()
+      sessionParameters.command = argv.command.join(' ')
+      sessionParameters.pure = argv.pure
+      if (argv.docker) {
+        sessionParameters.platform = Platform.DOCKER
+      }
+      await env.enter(sessionParameters)
     } catch (err) {
       error(err)
     }
@@ -234,10 +248,6 @@ yargs
         type: 'string'
       })
       .env('NIXSTER')
-      .positional('command', {
-        describe: 'Command to run',
-        type: 'string'
-      })
       .option('build', {
         describe: 'Should the image be built?',
         alias: 'b',
@@ -246,8 +256,7 @@ yargs
       })
   }, async (argv: any) => {
     const env = new Environment(argv.name)
-    if (argv.build) await env.dockerBuild()
-    else await env.dockerRun(argv.command)
+    await env.dockerBuild()
   })
 
   .command('add <pkgs..>', 'Add packages to the current environment', (yargs: any) => {

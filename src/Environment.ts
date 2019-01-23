@@ -1,6 +1,6 @@
 import fs from 'fs'
 import os from 'os'
-import path, { resolve } from 'path'
+import path from 'path'
 import stream from 'stream'
 
 import chalk from 'chalk'
@@ -17,6 +17,40 @@ import * as nix from './nix'
 
 // The home directory for environments
 let home = path.join(path.dirname(__dirname), 'envs')
+
+export enum Platform {
+  UNIX, WIN, DOCKER
+}
+
+/**
+ * Parameters of a user session inside an environment
+ */
+export class SessionParameters {
+  /**
+   * The platform to run the session within
+   */
+  platform?: Platform
+
+  /**
+   * An initial command to execute in the shell e.g. R or python
+   */
+  command: string = ''
+
+  /**
+   * Should the shell be 'pure'? Only
+   */
+  pure: boolean = true
+
+  /**
+   * Standard input stream
+   */
+  stdin: stream.Readable = process.stdin
+
+  /**
+   * Standard output stream
+   */
+  stdout: stream.Writable = process.stdout
+}
 
 /**
  * A computational environment
@@ -338,12 +372,53 @@ export default class Environment {
   /**
    * Enter the a shell within the environment
    *
-   * @param command An initial command to execute in the shell e.g. R or python
-   * @param pure Should the shell be 'pure'?
+   * @param sessionParameters Parameters of the session
    */
-  async enter (command: string = '', pure: boolean = true, stdin: stream.Readable = process.stdin, stdout: stream.Writable = process.stdout) {
-    const shellName = os.platform() === 'win32' ? 'powershell.exe' : 'bash'
-    const shellArgs = ['--noprofile']
+  async enter (sessionParameters: SessionParameters) {
+    let { command, platform, pure, stdin, stdout } = sessionParameters
+    const location = await nix.location(this.name)
+
+    if (platform === undefined) {
+      switch (os.platform()) {
+        case 'win32':
+          platform = Platform.WIN
+          break
+        default:
+          platform = Platform.UNIX
+      }
+    }
+
+    let shellName
+    let shellArgs: Array<string> = []
+
+    switch (platform) {
+      case Platform.WIN:
+        shellName = 'powershell.exe'
+        break
+      case Platform.DOCKER:
+        shellName = 'docker'
+        shellArgs = [
+          'run', '--interactive', '--tty', '--rm',
+          // Prepend the environment path to the PATH variable
+          '--env', `PATH=${location}/bin:${location}/sbin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin`,
+          // We also need to tell R where to find libraries
+          '--env', `R_LIBS_SITE=${location}/library`,
+          // Read-only bind mount of the Nix store
+          '--volume', '/nix/store:/nix/store:ro',
+          // We use Alpine Linux as a base image because it is very small but has some basic
+          // shell utilities (lkike ls and uname) that are good for debugging but also sometimes
+          // required for things like R
+          'alpine'
+        ].concat(
+          // Command to execute in the container
+          command ? command.split(' ') : 'sh'
+        )
+        break
+      default:
+        shellName = 'bash'
+        shellArgs = ['--noprofile']
+        break
+    }
 
     // Path to the shell executable. We need to do this
     // because the environment may not actually have any shell
@@ -351,15 +426,17 @@ export default class Environment {
     let shellPath = await spawn('which', [shellName])
     shellPath = shellPath.toString().trim()
 
-    // Inject Nixster into the environment as an alias so we can use it
-    // there without polluting the environment with additional binaries.
-    // During development you'll need to use ---pure=false so that
-    // node is available to run Nixster. In production, when a user
-    // has installed a binary, this shouldn't be necessary
-    let nixsterPath = await spawn('which', ['nixster'])
-    const tempRcFile = tmp.fileSync()
-    fs.writeFileSync(tempRcFile.name, `alias nixster="${nixsterPath.toString().trim()}"\n`)
-    shellArgs.push('--rcfile', tempRcFile.name)
+    if (platform === Platform.UNIX) {
+      // Inject Nixster into the environment as an alias so we can use it
+      // there without polluting the environment with additional binaries.
+      // During development you'll need to use ---pure=false so that
+      // node is available to run Nixster. In production, when a user
+      // has installed a binary, this shouldn't be necessary
+      let nixsterPath = await spawn('which', ['nixster'])
+      const tempRcFile = tmp.fileSync()
+      fs.writeFileSync(tempRcFile.name, `alias nixster="${nixsterPath.toString().trim()}"\n`)
+      shellArgs.push('--rcfile', tempRcFile.name)
+    }
 
     // Environment variables
     let vars = await this.vars(pure)
@@ -399,37 +476,11 @@ export default class Environment {
         shellProcess.kill('SIGKILL')
         // @ts-ignore
         if (stdout.isTTY) process.exit()
-        else resolve()
       }
       shellProcess.write(data)
     })
 
-    if (command) shellProcess.write(command + '\r')
-  }
-
-  /**
-   * Run a Docker container for this environment
-   */
-  async dockerRun (command: string = 'sh') {
-    const location = await nix.location(this.name)
-    await spawn('docker', [
-      'run', '--interactive', '--tty', '--rm',
-      // Prepend the environment path to the PATH variable
-      '--env', `PATH=${location}/bin:${location}/sbin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin`,
-      // We also need to tell R where to find libraries
-      '--env', `R_LIBS_SITE=${location}/library`,
-      // Read-only bind mount of the Nix store
-      '--volume', '/nix/store:/nix/store:ro',
-      // We use Alpine Linux as a base image because it is very small but has some basic
-      // shell utilities (lkike ls and uname) that are good for debugging but also sometimes
-      // required for things like R
-      'alpine'
-    ].concat(
-      // Command to execute in the container
-      command.split(' ')
-    ), {
-      stdio: 'inherit'
-    })
+    if (platform === Platform.UNIX && command) shellProcess.write(command + '\r')
   }
 
   /**
