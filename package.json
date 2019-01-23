@@ -35,7 +35,6 @@
   "homepage": "https://github.com/stencila/nixster#readme",
   "devDependencies": {
     "@types/better-sqlite3": "^5.2.1",
-    "@types/chalk": "^2.2.0",
     "@types/del": "^3.0.1",
     "@types/express": "^4.16.0",
     "@types/express-ws": "^3.0.0",
