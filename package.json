@@ -11,10 +11,12 @@
     "lint": "tslint --project tsconfig.json --fix --format stylish ./src/**/*.ts",
     "test": "jest",
     "cover": "jest --collectCoverage",
-    "build": "npm run build-dist",
-    "build-dist": "tsc",
+    "build": "npm run build:dist",
+    "build:dist": "tsc",
     "contributors:add": "all-contributors add",
-    "docs": "markdown-toc -i --maxdepth=4 README.md && typedoc --readme README.md --mode file --out ./docs ./src"
+    "docs": "markdown-toc -i --maxdepth=4 README.md && typedoc --readme README.md --mode file --out ./docs ./src",
+    "serve:dev": "ts-node src/serve.ts",
+    "serve:prod": "node dist/serve.js"
   },
   "repository": {
     "type": "git",
