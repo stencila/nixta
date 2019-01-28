@@ -41,15 +41,19 @@ curl https://nixos.org/nix/install | sh
 
 ## Docker
 
-Instead of installing Nix and Nixster you can use the `stencila/nixster` Docker image:
+Instead of installing Nix and Nixster you can use the `stencila/nixster` Docker image
 
 ```bash
-docker run -it --rm stencila/nixster bash
+make docker docker-interact
 ```
 
-```bash
-docker run -it --rm stencila/nixster bash
+Then inside the container try:
+
 ```
+nix-env --store /nixstore --install gcc
+```
+
+This will install `gcc` in  the local `/nixstore/nix/store` directory
 
 ## Demo
 

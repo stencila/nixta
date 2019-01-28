@@ -32,16 +32,19 @@ RUN apt-get update \
  && tar xjf nix-*-x86_64-linux.tar.bz2
 
 # Create a non-root user
-RUN groupadd nixbld
-RUN useradd --create-home  --groups nixbld nixster
+RUN groupadd --gid 30000 nixbld \
+  && for i in $(seq 1 30); do useradd --uid $((30000 + i)) --groups nixbld nixbld$i ; done
+RUN useradd --uid 1001 --create-home --groups nixbld nixster
 RUN install --mode 755 --owner nixster --directory /nix
+
+ENV USER root
 
 RUN mkdir -m 0755 /etc/nix \
  && echo 'sandbox = false' > /etc/nix/nix.conf
 
-USER nixster
+#USER nixster
 
-RUN USER=nixtser sh nix-*-x86_64-linux/install
+RUN USER=root sh nix-*-x86_64-linux/install
 #RUN /nix/var/nix/profiles/default/bin/nix-collect-garbage --delete-old \
 # && /nix/var/nix/profiles/default/bin/nix-store --optimise \
 # && /nix/var/nix/profiles/default/bin/nix-store --verify --check-contents
@@ -51,7 +54,7 @@ WORKDIR /home/nixster
 COPY --from=builder /nixster/build/nixster /home/nixster
 
 # Prepend application directory and Nix profile to PATH
-ENV PATH=/home/nixster:/home/nixster/.nix-profile/bin:/home/nixster/.nix-profile/sbin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ENV PATH=/home/nixster:/root/.nix-profile/bin:/root/.nix-profile/sbin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 # Check that Nixster is installed properly and do bootstapping of native Node modules 
 RUN nixster --help
