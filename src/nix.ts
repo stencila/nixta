@@ -94,14 +94,19 @@ export async function update (channels: string | Array<string> = [], last: boole
     [],
     ['--attr', 'rPackages']
   ]) {
-    const query = await spawn('nix-env', args.concat(extraArgs))
+    let allArgs = args.concat(extraArgs)
+    let query
+    try {
+      query = await spawn('nix-env', allArgs)
+    } catch (error) {
+      throw new Error(`Running "nix-env ${allArgs.join(' ')}" failed: ${error.stderr}`)
+    }
     let json = query.toString()
     let newPkgs
     try {
       newPkgs = JSON.parse(json)
     } catch (error) {
-      console.error(error)
-      console.error(json)
+      throw new Error(`Parsing JSON failed: ${error}`)
     }
     Object.assign(pkgs, newPkgs)
   }
