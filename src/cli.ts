@@ -177,6 +177,12 @@ yargs
         alias: 'env',
         type: 'string'
       })
+      .option('docker', {
+        describe: 'Build the environment using Docker? Nix packages are stored on the host.',
+        type: 'boolean',
+        alias: 'd',
+        default: false
+      })
       .env('NIXSTER')
       .option('docker', {
         describe: 'Also build a Docker container for the environment?',

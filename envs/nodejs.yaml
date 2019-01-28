@@ -1,7 +1,8 @@
 '@context': 'https://stenci.la/schema/v1/'
 type: Environment
 name: nodejs
-description: |
-  Contains only Node.js, the open-source, cross-platform JavaScript run-time environment.
+description: >
+  Contains only Node.js, the open-source, cross-platform JavaScript run-time
+  environment.
 adds:
   - nodejs

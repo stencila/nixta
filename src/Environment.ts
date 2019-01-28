@@ -21,6 +21,9 @@ export enum Platform {
   UNIX, WIN, DOCKER
 }
 
+const DOCKER_DEFAULT_COMMAND = 'sh'
+const DOCKER_CONTAINER_ID_SHORT_LENGTH = 12
+
 /**
  * Parameters of a user session inside an environment
  */
@@ -49,6 +52,25 @@ export class SessionParameters {
    * Standard output stream
    */
   stdout: stream.Writable = process.stdout
+
+  /**
+   * CPU shares (only applies when using Docker platform). Priority of the container relative to other processes.
+   * The default is 1024, a higher number means higher priority for execution (when CPU contention exists).
+   */
+  cpuShares: Number = 1024
+
+  /**
+   * Memory limit (only applies when using Docker platform). Maximum amount of memory a container can use.
+   * Should be set in the format <number>[<unit>]). Number is a positive integer. Unit can be one of b, k, m, or g.
+   * Minimum is 4M.
+   */
+  memoryLimit: string = '0'
+
+  /**
+   * The ID of the container to attempt to use for an execution. It may be an empty string in which case the executor
+   * will start a new container.
+   */
+  containerId: string = ''
 }
 
 /**
@@ -350,11 +372,11 @@ export default class Environment {
   /**
    * Create variables for an environment.
    *
-   * This method is used in several other metho
+   * This method is used in several other methods
    * e.g. `within`, `enter`
    *
    * A 'pure' environment will only have available the executables that
-   * were exlicitly installed into the environment
+   * were explicitly installed into the environment
    *
    * @param pure Should the shell that this command is executed in be 'pure'?
    */
@@ -389,6 +411,35 @@ export default class Environment {
     })
   }
 
+  private async getDockerShellArgs (dockerCommand: string, sessionParameters: SessionParameters, daemonize: boolean = false): Promise<Array<string>> {
+    const { command, cpuShares, memoryLimit } = sessionParameters
+    const nixLocation = await nix.location(this.name)
+    const shellArgs = [
+          dockerCommand, '--interactive', '--tty', '--rm',
+          // Prepend the environment path to the PATH variable
+          '--env', `PATH=${nixLocation}/bin:${nixLocation}/sbin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin`,
+          // We also need to tell R where to find libraries
+          '--env', `R_LIBS_SITE=${nixLocation}/library`,
+          // Read-only bind mount of the Nix store
+          '--volume', '/nix/store:/nix/store:ro',
+          // Apply CPU shares
+          `--cpu-shares=${cpuShares}`,
+          // Apply memory limit
+          `--memory=${memoryLimit}`,
+          // We use Alpine Linux as a base image because it is very small but has some basic
+          // shell utilities (lkike ls and uname) that are good for debugging but also sometimes
+          // required for things like R
+          'alpine'
+        ].concat(
+          // Command to execute in the container
+          command ? command.split(' ') : DOCKER_DEFAULT_COMMAND
+        )
+
+    if (daemonize) shellArgs.splice(1, 0, '-d')
+
+    return shellArgs
+  }
+
   /**
    * Enter the a shell within the environment
    *
@@ -396,7 +447,6 @@ export default class Environment {
    */
   async enter (sessionParameters: SessionParameters) {
     let { command, platform, pure, stdin, stdout } = sessionParameters
-    const location = await nix.location(this.name)
 
     if (platform === undefined) {
       switch (os.platform()) {
@@ -417,22 +467,7 @@ export default class Environment {
         break
       case Platform.DOCKER:
         shellName = 'docker'
-        shellArgs = [
-          'run', '--interactive', '--tty', '--rm',
-          // Prepend the environment path to the PATH variable
-          '--env', `PATH=${location}/bin:${location}/sbin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin`,
-          // We also need to tell R where to find libraries
-          '--env', `R_LIBS_SITE=${location}/library`,
-          // Read-only bind mount of the Nix store
-          '--volume', '/nix/store:/nix/store:ro',
-          // We use Alpine Linux as a base image because it is very small but has some basic
-          // shell utilities (lkike ls and uname) that are good for debugging but also sometimes
-          // required for things like R
-          'alpine'
-        ].concat(
-          // Command to execute in the container
-          command ? command.split(' ') : 'sh'
-        )
+        shellArgs = await this.getDockerShellArgs('run', sessionParameters, false)
         break
       default:
         shellName = 'bash'
@@ -452,10 +487,14 @@ export default class Environment {
       // During development you'll need to use ---pure=false so that
       // node is available to run Nixster. In production, when a user
       // has installed a binary, this shouldn't be necessary
-      let nixsterPath = await spawn('which', ['nixster'])
-      const tempRcFile = tmp.fileSync()
-      fs.writeFileSync(tempRcFile.name, `alias nixster="${nixsterPath.toString().trim()}"\n`)
-      shellArgs.push('--rcfile', tempRcFile.name)
+      try {
+        let nixsterPath = await spawn('which', ['nixster'])
+        const tempRcFile = tmp.fileSync()
+        fs.writeFileSync(tempRcFile.name, `alias nixster="${nixsterPath.toString().trim()}"\n`)
+        shellArgs.push('--rcfile', tempRcFile.name)
+      } catch (e) {
+        // ignore
+      }
     }
 
     // Environment variables
@@ -511,5 +550,54 @@ export default class Environment {
     })
 
     if (platform === Platform.UNIX && command) shellProcess.write(command + '\r')
+  }
+
+  private async checkContainerRunning (containerId: string) {
+    const containerRegex = new RegExp(/^[^_\W]{12}$/)
+    if (containerRegex.exec(containerId) === null) {
+      throw new Error(`'${containerId}' is not a valid docker container ID.`)
+    }
+
+    // List running containers that match the containerId we are looking for. There should be only one or zero.
+    const dockerPsProcess = await spawn('docker', ['ps', '-q', '--filter', `id=${containerId}`])
+    const foundContainerId = dockerPsProcess.toString().trim()
+    return foundContainerId === containerId // foundContainerId should be either containerId or an empty string
+  }
+
+  /**
+   * Start a new Docker container and execute a command within it. The container daemonizes and keeps running
+   * (until the process it is running stops).
+   *
+   * Returns the short ID of the container that is running.
+   */
+  async execute (sessionParameters: SessionParameters): Promise<string> {
+    if (sessionParameters.platform !== Platform.DOCKER) {
+      throw new Error('Execute is only valid with the Docker platform.')
+    }
+
+    const shellArgs = await this.getDockerShellArgs('run', sessionParameters, true)
+
+    const dockerProcess = await spawn('docker', shellArgs)
+    return dockerProcess.toString().trim().substr(0, DOCKER_CONTAINER_ID_SHORT_LENGTH)
+  }
+
+  /**
+   * Build a Docker container for this environment
+   */
+  async dockerBuild () {
+    const requisites = await nix.requisites(this.name)
+    const dockerignore = `*\n${requisites.map(req => '!' + req).join('\n')}`
+    console.log(dockerignore)
+
+    // The Dockerfile does essentially the same as the `docker run` command
+    // generated above in `dockerRun`...
+    const location = await nix.location(this.name)
+    const dockerfile = `
+FROM alpine
+ENV PATH ${location}/bin:${location}/sbin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ENV R_LIBS_SITE=${location}/library
+COPY /nix/store /nix/store
+    `
+    console.log(dockerfile)
   }
 }

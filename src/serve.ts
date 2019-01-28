@@ -11,6 +11,11 @@ const expressWs = require('express-ws')(app)
 // Serve static assets from ./static
 app.use(express.static(path.join(__dirname, 'static')))
 
+// JSON Body Parsing
+const jsonParser = require('body-parser').json()
+app.use(jsonParser)
+
+// todo: rename shell to interact
 // Instantiate shell and set up data handlers
 expressWs.app.ws('/shell', async (ws: any, req: express.Request) => {
   try {
@@ -49,6 +54,25 @@ app.use((error: Error, req: express.Request, res: express.Response, next: any) =
   res.status(500)
   res.render('error', { error })
   next(error)
+})
+
+expressWs.app.post('/execute', jsonParser, async (req: any, res: any) => {
+  // req: some JSON -> new SessionParameters object to start in env.execute (new execute method)
+  if (!req.body) return res.sendStatus(400)
+
+  const env = new Environment(req.body.environmentId)
+  const sessionParameters = new SessionParameters()
+  sessionParameters.platform = Platform.DOCKER
+  sessionParameters.command = req.body.command || ''
+
+  const containerId = await env.execute(sessionParameters)
+  res.status(200).json({
+    containerId: containerId
+  })
+})
+
+expressWs.app.post('/stop', async (req: any, res: any) => {
+  // req: some JSON -> with container ID that will stop the container
 })
 
 app.listen(3000)

@@ -21,6 +21,7 @@ export function semver (version: string): string {
   let match = version.match(/^(\d+)(\.(\d+))?(\.(\d+))?(.*)?/)
   return match ? sprintf('%05i.%05i.%05i%s', match[1], match[3] || 0, match[5] || 0, match[6] || '') : version
 }
+
 // Register function in the database
 try {
   db.function('semver', semver)
@@ -218,7 +219,7 @@ export async function match (pkg: string): Promise<Array<any>> {
  * @param limit Limit on number of packages to return
  */
 export async function search (term: string, type: string = '', limit: number = 1000): Promise<Array<any>> {
-  term = term.replace("'", "\'")
+  term = term.replace('\'', '\'')
   // TODO: find a way to show the channel and description for the latest
   // version
   const stmt = db.prepare(`
@@ -246,7 +247,7 @@ export async function search (term: string, type: string = '', limit: number = 1
  * @param env The environment name
  */
 export async function built (env: string): Promise<boolean> {
-  return (await location(env)).length > 0
+  return (location(env)).length > 0
 }
 
 /**
@@ -254,11 +255,10 @@ export async function built (env: string): Promise<boolean> {
  *
  * @param env The environment name
  */
-export async function location (env: string): Promise<string> {
+export function location (env: string): string {
   const profile = path.join(profiles, env)
   if (!fs.existsSync(profile)) return ''
-  const readlink = await spawn('readlink', ['-f', profile])
-  return readlink
+  return fs.realpathSync(profile)
 }
 
 /**
@@ -267,8 +267,8 @@ export async function location (env: string): Promise<string> {
  * @param env The environment name
  * @param pkgs An array of normalized package names
  */
-export async function install (env: string, pkgs: Array<string>, clean: boolean = false) {
-  let channels: {[key: string]: any} = {}
+export async function install (env: string, pkgs: Array<string>, clean: boolean = false, inDocker: boolean = false) {
+  let channels: { [key: string]: any } = {}
   for (let pkg of pkgs) {
     let matches = await match(pkg)
     if (matches.length === 0) {
@@ -295,7 +295,23 @@ export async function install (env: string, pkgs: Array<string>, clean: boolean 
     if (clean) args = args.concat('--remove-all')
     args = args.concat('--attr', channels[channel].map((pkg: any) => pkg.attr))
 
-    await spawn('nix-env', args, {
+    let command
+
+    if (inDocker) {
+      command = 'docker'
+      let dockerArgs = [
+          'run',
+          'stencila/nixster', 'nix-env'
+          // todo: write correct commands
+      ]
+      args = dockerArgs.concat(args)
+    } else {
+      command = 'nix-env'
+    }
+
+    console.log(args.join(' '))
+
+    await spawn(command, args, {
       stdio: 'inherit'
     })
   }
@@ -363,7 +379,7 @@ export async function requisites (env: string): Promise<Array<any>> {
   const query = await spawn('nix-store', [
     '--query',
     '--requisites',
-    await location(env)
+    location(env)
   ])
   const list = query.toString().trim()
   return list.length ? list.split('\n') : []

@@ -64,6 +64,7 @@
   "dependencies": {
     "await-spawn": "^2.1.2",
     "better-sqlite3": "^5.2.1",
+    "body-parser": "^1.18.3",
     "chalk": "^2.4.2",
     "del": "^3.0.0",
     "ellipsize": "^0.1.0",
