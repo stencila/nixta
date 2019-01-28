@@ -19,11 +19,14 @@ COPY src static/
 COPY tsconfig.json .
 RUN npm run build
 
-# Main image with Nix installed and NIxter copied into it
+# Main image with Nix installed and Nixter copied into it
+#
+# This is based on https://github.com/NixOS/docker/blob/master/Dockerfile
+# but modified to run on Ubuntu.
+
+# TODO cleanup and condense into fewer RUN directives
 
 FROM ubuntu:18.04
-
-# This is based on https://github.com/NixOS/docker/blob/master/Dockerfile
 
 RUN apt-get update \
  && DEBIAN_FRONTEND=noninteractive apt-get install -y wget ca-certificates \
@@ -41,6 +44,10 @@ ENV USER root
 
 RUN mkdir -m 0755 /etc/nix \
  && echo 'sandbox = false' > /etc/nix/nix.conf
+
+# `xz-utils` is required for Nix to decompress tar files
+RUN apt-get update \
+ && DEBIAN_FRONTEND=noninteractive apt-get install -y xz-utils
 
 #USER nixster
 
