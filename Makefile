@@ -16,6 +16,21 @@ build:
 	npm run build
 .PHONY: build
 
+serve:
+	npm run serve:dev
+
+docker:
+	docker build . --tag stencila/nixster
+
+docker-run:
+	docker run --rm --interactive --tty --volume $$PWD/nixstore:/nixstore --publish 3000:3000 stencila/nixster 
+
+docker-interact:
+	docker run --rm --interactive --tty --volume $$PWD/nixstore:/nixstore stencila/nixster bash
+
+docker-push:
+	docker push stencila/nixster
+
 docs:
 	npm run docs
 .PHONY: docs

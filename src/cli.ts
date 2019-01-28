@@ -7,6 +7,8 @@
  * calls to functions and methods in other modules.
  */
 
+import './boot'
+
 import { sprintf } from 'sprintf-js'
 import chalk from 'chalk'
 // @ts-ignore
@@ -384,6 +386,12 @@ yargs
     const type = argv.type || ''
     const list = await nix.search(term, type)
     output({ list, term, type }, argv, searchPrettify)
+  })
+
+  .command('serve', 'Serve', (yargs: any) => {
+    outputOptions(yargs)
+  }, async (argv: any) => {
+    require('./serve')
   })
 
   .parse()

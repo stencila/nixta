@@ -4,17 +4,12 @@
 import fs from 'fs'
 import path from 'path'
 
-import Database from 'better-sqlite3'
 import mkdirp from 'mkdirp'
 // @ts-ignore
 import spawn from 'await-spawn'
 import { sprintf } from 'sprintf-js'
 
-/**
- * The Nixster database used to cache data on
- * packages and environments.
- */
-const db = new Database('nixster.sqlite3')
+import db from './db'
 
 /**
  * Create a version string that can be ordered
@@ -113,21 +108,6 @@ export async function update (channels: string | Array<string> = [], last: boole
   console.log(`Obtained list of ${Object.keys(pkgs).length} for channel ${channel}`)
 
   console.log(`Updating database with package data`)
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS packages (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      type,
-      name,
-      version,
-      runtime,
-      channel,
-      attr,
-      fullname,
-      priority INT,
-      description TEXT,
-      meta TEXT
-    )
-  `)
   const insert = db.prepare(`
     INSERT INTO packages (type, name, version, runtime, channel, attr, fullname, priority, description, meta)
     VALUES (@type, @name, @version, @runtime, @channel, @attr, @fullname, @priority, @description, @meta)
@@ -208,13 +188,6 @@ export async function update (channels: string | Array<string> = [], last: boole
   if (last) {
     // Create full text search virtual table
     db.exec(`
-      DROP TABLE IF EXISTS packages_text;
-      CREATE VIRTUAL TABLE packages_text USING fts4(
-        id INTEGER,
-        type TEXT,
-        name TEXT,
-        description TEXT
-      );
       INSERT INTO packages_text SELECT id, type, name, description FROM packages
     `)
   }

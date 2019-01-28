@@ -311,7 +311,7 @@ export default class Environment {
 
   /**
    * Build this environment
-   * 
+   *
    * @param docker Also build a Docker container for the environment?
    */
   async build (docker: boolean = false): Promise<Environment> {
@@ -322,7 +322,7 @@ export default class Environment {
       const requisites = await nix.requisites(this.name)
       const dockerignore = `*\n${requisites.map(req => '!' + req).join('\n')}`
       console.log(dockerignore)
-  
+
       // The Dockerfile does essentially the same as the `docker run` command
       // generated above in `dockerRun`...
       const location = await nix.location(this.name)

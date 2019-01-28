@@ -39,6 +39,18 @@ You will also need to have [Nix installed](https://nixos.org/nix/download.html):
 curl https://nixos.org/nix/install | sh
 ```
 
+## Docker
+
+Instead of installing Nix and Nixster you can use the `stencila/nixster` Docker image:
+
+```bash
+docker run -it --rm stencila/nixster bash
+```
+
+```bash
+docker run -it --rm stencila/nixster bash
+```
+
 ## Demo
 
 <a href="https://asciinema.org/a/KD0z367VL5mBNknueUpqzVGMP?size=medium&cols=120&autoplay=1" target="_blank"><img src="https://asciinema.org/a/KD0z367VL5mBNknueUpqzVGMP.svg" /></a>

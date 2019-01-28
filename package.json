@@ -1,7 +1,7 @@
 {
   "name": "@stencila/nixster",
   "version": "18.12.0",
-  "description": "A package and environment manager built on top of Nix",
+  "description": "A package manager and distribution based on Nix",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
@@ -11,8 +11,9 @@
     "lint": "tslint --project tsconfig.json --fix --format stylish ./src/**/*.ts",
     "test": "jest",
     "cover": "jest --collectCoverage",
-    "build": "npm run build:dist",
+    "build": "npm run build:dist && npm run build:bins",
     "build:dist": "tsc",
+    "build:bins": "tar czf node_modules.tar.gz node_modules/better-sqlite3 node_modules/integer node_modules/node-pty && pkg --target=node10 --out-path=build .",
     "contributors:add": "all-contributors add",
     "docs": "markdown-toc -i --maxdepth=4 README.md && typedoc --readme README.md --mode file --out ./docs ./src",
     "serve:dev": "ts-node src/serve.ts",
@@ -45,11 +46,13 @@
     "@types/mkdirp": "^0.5.2",
     "@types/sprintf-js": "^1.1.1",
     "@types/stream-to-promise": "^2.2.0",
+    "@types/tar": "^4.0.0",
     "@types/tmp": "0.0.33",
     "@types/yargs": "^12.0.5",
     "all-contributors-cli": "^5.7.0",
     "jest": "^23.6.0",
     "markdown-toc": "^1.2.0",
+    "pkg": "^4.3.7",
     "ts-jest": "^23.10.5",
     "ts-node": "^7.0.1",
     "tslint": "^5.12.0",
@@ -70,8 +73,16 @@
     "mkdirp": "^0.5.1",
     "node-pty": "^0.8.0",
     "sprintf-js": "^1.1.2",
+    "tar": "^4.4.8",
     "tmp": "0.0.33",
     "xterm": "^3.10.1",
     "yargs": "^12.0.5"
+  },
+  "pkg": {
+    "assets": [
+      "./envs/**/*",
+      "./static/**/*",
+      "./node_modules.tar.gz"
+    ]
   }
 }
