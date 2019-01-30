@@ -16,8 +16,8 @@
     "build:bins": "tar czf node_modules.tar.gz node_modules/better-sqlite3 node_modules/integer node_modules/node-pty && pkg --target=node10 --out-path=build .",
     "contributors:add": "all-contributors add",
     "docs": "markdown-toc -i --maxdepth=4 README.md && typedoc --readme README.md --mode file --out ./docs ./src",
-    "serve:dev": "ts-node src/serve.ts",
-    "serve:prod": "node dist/serve.js"
+    "serve:dev": "ts-node-dev src/cli.ts serve",
+    "serve:dist": "node dist/cli.js serve"
   },
   "repository": {
     "type": "git",
@@ -55,6 +55,7 @@
     "pkg": "^4.3.7",
     "ts-jest": "^23.10.5",
     "ts-node": "^7.0.1",
+    "ts-node-dev": "^1.0.0-pre.32",
     "tslint": "^5.12.0",
     "tslint-config-standard": "^8.0.1",
     "typedoc": "^0.14.0",
