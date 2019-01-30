@@ -1,7 +1,7 @@
 
 ## Server testing and deployment
 
-In addition to the command line interface, Nixster provides a web server interface (started using the CLI `serve` command) allowing remote users to start interactive sessions within environments. In this section we provides some tips on how to test and deploy the Nixster server, moving from the simplest, local development scenario through to a production, cluster deployment scenario. If you're debugging the server code and/or setup it can be useful to progressively move from the simple to complex scenarios.
+In addition to the command line interface, Nixster provides a web server interface (started using the CLI `serve` command) allowing remote users to start interactive sessions within environments. In this section we provides some tips on how to test and deploy the Nixster server, moving from the simplest, local development scenario through to the most complex, Kubernetes cluster deployment scenario. If you're debugging the server code and/or setup it can be useful to progressively move from the simple to complex scenarios.
 
 ### Local development
 
@@ -31,7 +31,7 @@ npm run build
 ./build/nixster serve
 ```
 
-## Local Docker testing
+## Local Docker container testing
 
 The Nixster [`Dockerfile`](Dockerfile) defines a two-stage image build. In the first stage, the binary execuable is built on Linux. It's copied to the final image in the second stage. We do this here, rather than copy the locally build binary, because you might be on Mac or Windows and for deployment we need a Lnux build (plus it's more reproducible :) You can test the first stage build using:
 
@@ -47,3 +47,12 @@ make docker # builds the full image
 make docker-serve # mounts volumes, publishes ports and serves from the image
 ```
 
+## Local container orchestration testing
+
+In production, Nixster requires two containers to be running, one using the `stencila/nixster` image and one using the `docker:dind` image to provide a Docker daemon. To test that these containers and volumes are configured to talk each other properly you can use [`docker-compose`](https://docs.docker.com/compose/):
+
+```bash
+docker-compose up
+```
+
+Use `Ctrl+C` to stop both containers. The `--build` flag ensures that you are using the latest version of the Nixster image defined in the `Dockerfile`.

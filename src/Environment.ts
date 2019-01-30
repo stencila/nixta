@@ -358,7 +358,7 @@ export default class Environment {
    *
    * @param pure Should the shell that this command is executed in be 'pure'?
    */
-  async vars (pure: boolean = false) {
+  async vars (pure: boolean = false) : Promise<{[key: string]: string}> {
     const location = await nix.location(this.name)
 
     let PATH = `${location}/bin:${location}/sbin`
@@ -467,6 +467,16 @@ export default class Environment {
       // a Nixster environment and which one.
       PS1: '☆ ' + chalk.green.bold(this.name) + ':' + chalk.blue('\\w') + '$ '
     })
+
+    // Environment variable for Docker
+    // The Docker CLI supports a number of environment variables (https://docs.docker.com/engine/reference/commandline/cli/#environment-variables)
+    // In particular, `DOCKER_HOST` is used in deployment to specify the Docker daemon being used.
+    // We pass all `DOCKER_` env vars on when Docker is the target platform.
+    if (platform === Platform.DOCKER) {
+      for (let name of Object.keys(process.env).filter(name => name.startsWith('DOCKER_'))) {
+        vars[name] = process.env[name] || ''
+      }
+    }
 
     const shellProcess = pty.spawn(shellPath, shellArgs, {
       name: 'xterm-color',

@@ -1,0 +1,17 @@
+version: "3"
+services:
+
+  nixster:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      DOCKER_HOST: tcp://docker-in-docker:2375
+    command: nixster serve
+
+  docker-in-docker:
+    image: docker:dind
+    privileged: true
+    expose:
+      - 2375
+      - 2376
