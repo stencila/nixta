@@ -1,9 +1,30 @@
 import path from 'path'
 import stream from 'stream'
+import yargs from 'yargs'
+
 
 import express from 'express'
 
 import Environment, { SessionParameters, Platform } from './Environment'
+
+const DEFAULT_PORT = 3000
+
+let argv = yargs.scriptName('nixster-serve')
+    .help('h')
+    .alias('h', 'help')
+    .option('port', {
+      alias: 'p',
+      default: DEFAULT_PORT,
+      describe: 'Port to listen on',
+      type: 'number'
+    })
+    .option('address', {
+      alias: 'a',
+      default: 'localhost',
+      describe: 'Host address to listen on',
+      type: 'string'
+    })
+    .argv
 
 const app = express()
 const expressWs = require('express-ws')(app)
@@ -14,6 +35,7 @@ app.use(express.static(path.join(__dirname, 'static')))
 // JSON Body Parsing
 const jsonParser = require('body-parser').json()
 app.use(jsonParser)
+
 
 // todo: rename shell to interact
 // Instantiate shell and set up data handlers
@@ -75,5 +97,5 @@ expressWs.app.post('/stop', async (req: any, res: any) => {
   // req: some JSON -> with container ID that will stop the container
 })
 
-app.listen(3000)
-console.error('Listening on http://localhost:3000')
+app.listen(argv.port, argv.address)
+console.info(`Listening on http://${argv.address}:${argv.port}`)

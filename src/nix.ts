@@ -267,7 +267,7 @@ export function location (env: string): string {
  * @param env The environment name
  * @param pkgs An array of normalized package names
  */
-export async function install (env: string, pkgs: Array<string>, clean: boolean = false, inDocker: boolean = false) {
+export async function install (env: string, pkgs: Array<string>, clean: boolean = false) {
   let channels: { [key: string]: any } = {}
   for (let pkg of pkgs) {
     let matches = await match(pkg)
@@ -295,23 +295,7 @@ export async function install (env: string, pkgs: Array<string>, clean: boolean 
     if (clean) args = args.concat('--remove-all')
     args = args.concat('--attr', channels[channel].map((pkg: any) => pkg.attr))
 
-    let command
-
-    if (inDocker) {
-      command = 'docker'
-      let dockerArgs = [
-          'run',
-          'stencila/nixster', 'nix-env'
-          // todo: write correct commands
-      ]
-      args = dockerArgs.concat(args)
-    } else {
-      command = 'nix-env'
-    }
-
-    console.log(args.join(' '))
-
-    await spawn(command, args, {
+    await spawn('nix-env', args, {
       stdio: 'inherit'
     })
   }
