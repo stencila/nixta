@@ -209,7 +209,7 @@ export default class Environment {
       envs.push(Object.assign({}, env, {
         path: env.path(),
         built: await nix.built(name),
-        location: await nix.location(name)
+        location: nix.location(name)
       }))
     }
     return envs
@@ -225,7 +225,7 @@ export default class Environment {
 
     const desc: any = Object.assign({}, this, {
       path: this.path(),
-      location: await nix.location(this.name),
+      location: nix.location(this.name),
       packages: await nix.packages(this.name)
     })
 
@@ -346,7 +346,7 @@ export default class Environment {
 
       // The Dockerfile does essentially the same as the `docker run` command
       // generated above in `dockerRun`...
-      const location = await nix.location(this.name)
+      const location = nix.location(this.name)
       const dockerfile = `
   FROM alpine
   ENV PATH ${location}/bin:${location}/sbin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
@@ -380,8 +380,8 @@ export default class Environment {
    *
    * @param pure Should the shell that this command is executed in be 'pure'?
    */
-  async vars (pure: boolean = false) : Promise<{[key: string]: string}> {
-    const location = await nix.location(this.name)
+  async vars (pure: boolean = false): Promise<{[key: string]: string}> {
+    const location = nix.location(this.name)
 
     let PATH = `${location}/bin:${location}/sbin`
     if (!pure) PATH += ':' + process.env.PATH
@@ -411,9 +411,16 @@ export default class Environment {
     })
   }
 
+  /**
+   * Get an array suitable for passing to `spawn` to execute a docker command with default args for nixster
+   *
+   * @param dockerCommand The Docker command to execute
+   * @param sessionParameters SessionParameters to use for limiting Docker's resource usage
+   * @param daemonize Should the Docker command be run with the '-d' flag?
+   */
   private async getDockerShellArgs (dockerCommand: string, sessionParameters: SessionParameters, daemonize: boolean = false): Promise<Array<string>> {
     const { command, cpuShares, memoryLimit } = sessionParameters
-    const nixLocation = await nix.location(this.name)
+    const nixLocation = nix.location(this.name)
     const shellArgs = [
           dockerCommand, '--interactive', '--tty', '--rm',
           // Prepend the environment path to the PATH variable
@@ -552,7 +559,12 @@ export default class Environment {
     if (platform === Platform.UNIX && command) shellProcess.write(command + '\r')
   }
 
-  private async checkContainerRunning (containerId: string) {
+  /**
+   * Determine if a Docker container is running using 'docker ps'
+   *
+   * @param containerId The ID of the container, can either be the long or truncated version.
+   */
+  private async checkContainerRunning (containerId: string): Promise<boolean> {
     const containerRegex = new RegExp(/^[^_\W]{12}$/)
     if (containerRegex.exec(containerId) === null) {
       throw new Error(`'${containerId}' is not a valid docker container ID.`)
@@ -591,7 +603,7 @@ export default class Environment {
 
     // The Dockerfile does essentially the same as the `docker run` command
     // generated above in `dockerRun`...
-    const location = await nix.location(this.name)
+    const location = nix.location(this.name)
     const dockerfile = `
 FROM alpine
 ENV PATH ${location}/bin:${location}/sbin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin

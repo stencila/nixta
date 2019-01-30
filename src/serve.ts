@@ -2,7 +2,6 @@ import path from 'path'
 import stream from 'stream'
 import yargs from 'yargs'
 
-
 import express from 'express'
 
 import Environment, { SessionParameters, Platform } from './Environment'
@@ -35,7 +34,6 @@ app.use(express.static(path.join(__dirname, 'static')))
 // JSON Body Parsing
 const jsonParser = require('body-parser').json()
 app.use(jsonParser)
-
 
 // todo: rename shell to interact
 // Instantiate shell and set up data handlers
