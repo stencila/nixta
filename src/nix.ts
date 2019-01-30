@@ -5,11 +5,10 @@ import fs from 'fs'
 import path from 'path'
 
 import mkdirp from 'mkdirp'
-// @ts-ignore
-import spawn from 'await-spawn'
 import { sprintf } from 'sprintf-js'
 
 import db from './db'
+import spawn from './spawn'
 
 /**
  * Create a version string that can be ordered
@@ -46,14 +45,14 @@ mkdirp.sync(profiles)
 export async function channel (url: string = 'https://nixos.org/channels/nixpkgs-unstable', name: string = 'nixpkgs-unstable') {
   // Update the channel
   // nix-channel --add url [name] : Adds a channel named name with URL url to the list of subscribed channels
-  spawn('nix-channel', ['--add', url, name])
+  await spawn('nix-channel', ['--add', url, name])
   // nix-channel --update [names...] : Downloads the Nix expressions of all subscribed channels (or only those included in names if specified) and
   // makes them the default for nix-env operations (by symlinking them from the directory ~/.nix-defexpr).
-  spawn('nix-channel', ['--update', name])
+  await spawn('nix-channel', ['--update', name])
   // nix-channel --list : Prints the names and URLs of all subscribed channels on standard output.
-  const list = spawn('nix-channel', ['--list'])
+  const list = await spawn('nix-channel', ['--list'])
   console.log('Updated channel. Current channel list:')
-  list.stdout.pipe(process.stdout)
+  console.log(list)
 }
 
 /**
@@ -95,13 +94,7 @@ export async function update (channels: string | Array<string> = [], last: boole
     ['--attr', 'rPackages']
   ]) {
     let allArgs = args.concat(extraArgs)
-    let query
-    try {
-      query = await spawn('nix-env', allArgs)
-    } catch (error) {
-      throw new Error(`Running "nix-env ${allArgs.join(' ')}" failed: ${error.stderr}`)
-    }
-    let json = query.toString()
+    let json = await spawn('nix-env', allArgs)
     let newPkgs
     try {
       newPkgs = JSON.parse(json)
@@ -265,7 +258,7 @@ export async function location (env: string): Promise<string> {
   const profile = path.join(profiles, env)
   if (!fs.existsSync(profile)) return ''
   const readlink = await spawn('readlink', ['-f', profile])
-  return readlink.toString().trim()
+  return readlink
 }
 
 /**

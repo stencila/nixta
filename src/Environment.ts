@@ -8,11 +8,10 @@ import del from 'del'
 import glob from 'glob'
 import mkdirp from 'mkdirp'
 import * as pty from 'node-pty'
-// @ts-ignore
-import spawn from 'await-spawn'
 import tmp from 'tmp'
 import yaml from 'js-yaml'
 
+import spawn from './spawn'
 import * as nix from './nix'
 
 // The home directory for environments
