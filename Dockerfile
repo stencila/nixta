@@ -2,8 +2,11 @@
 
 # Build the Nixster binary
 # Note that the `nixster` binary produced will include native modules
-# e.g. better-sqlite3.node for the platform it is built on (so it needs
+# e.g. `better-sqlite3.node` for the platform it is built on (so it needs
 # to be a Linux builder to run on Linux-based Docker image)
+# You can test this stage alone by building and running like this:
+#   docker build . --target builder --tag stencila/nixster:builder
+#   docker run --rm -it -p 3000:3000 stencila/nixster:builder ./build/nixster serve
 
 FROM node:10 AS builder
 WORKDIR /nixster
@@ -72,5 +75,12 @@ RUN nix-env --version
 RUN nix-channel --add https://nixos.org/channels/nixos-18.09 \
  && nix-channel --update \
  && nixster update nixos-18.09
+
+# Install Docker (only the client is used in this image, the daemon runs elsewhere)
+# HT to https://stackoverflow.com/a/43594065
+ENV DOCKERVERSION=18.09.1
+RUN wget https://download.docker.com/linux/static/stable/x86_64/docker-${DOCKERVERSION}.tgz \
+ && tar xzvf docker-${DOCKERVERSION}.tgz --strip 1 -C /usr/local/bin docker/docker \
+ && rm docker-${DOCKERVERSION}.tgz
 
 CMD nixster serve

@@ -37,7 +37,11 @@ docker-build:
 
 # Run the Nixster server 
 docker-serve:
-	docker run --rm --interactive --tty --volume $$PWD/nixstore:/nixstore --publish 3000:3000 stencila/nixster nixster serve
+	docker run --rm --interactive --tty \
+		--volume $$PWD/nixstore:/nixstore \
+		--volume /var/run/docker.sock:/var/run/docker.sock \
+		--publish 3000:3000 \
+		stencila/nixster nixster serve
 
 # Interact with the container in a Bash shell. Useful for debugging build errors
 docker-interact:
