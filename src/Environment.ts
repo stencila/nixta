@@ -11,7 +11,7 @@ import * as pty from 'node-pty'
 import tmp from 'tmp'
 import yaml from 'js-yaml'
 
-import {home} from './boot'
+import { home } from './boot'
 import spawn from './spawn'
 import * as nix from './nix'
 
@@ -48,6 +48,8 @@ export class SessionParameters {
    */
   stdout: stream.Writable = process.stdout
 }
+
+let ENVIRONS_HOME = path.join(home, 'envs')
 
 /**
  * A computational environment
@@ -102,10 +104,20 @@ export default class Environment {
   }
 
   /**
+   * Get or set the ome directory for environments
+   *
+   * @param value Value for home directory
+   */
+  static home (value?: string): string {
+    if (value) ENVIRONS_HOME = value
+    return ENVIRONS_HOME
+  }
+
+  /**
    * Path to the environment specification files
    */
   path (): string {
-    return path.join(home, 'envs', this.name + '.yaml')
+    return path.join(Environment.home(), this.name + '.yaml')
   }
 
   /**
@@ -125,7 +137,7 @@ export default class Environment {
     if (this.adds && this.adds.length === 0) this.adds = undefined
     if (this.removes && this.removes.length === 0) this.removes = undefined
 
-    mkdirp.sync(path.join(home, 'envs'))
+    mkdirp.sync(Environment.home())
     const yml = yaml.safeDump(this, { skipInvalid: true })
     fs.writeFileSync(this.path(), yml)
     return this
@@ -168,7 +180,7 @@ export default class Environment {
    * List the environments on this machine
    */
   static async envs (): Promise<Array<any>> {
-    const names = glob.sync('*.yaml', { cwd: path.join(home, 'envs') }).map(file => file.slice(0, -5))
+    const names = glob.sync('*.yaml', { cwd: Environment.home() }).map(file => file.slice(0, -5))
     const envs = []
     for (let name of names) {
       const env = new Environment(name)
