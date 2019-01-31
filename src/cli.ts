@@ -178,6 +178,11 @@ yargs
         type: 'string'
       })
       .env('NIXSTER')
+      .option('store', {
+        describe: 'The Nix store to be built into.',
+        type: 'string',
+        alias: 's'
+      })
       .option('docker', {
         describe: 'Also build a Docker container for the environment?',
         type: 'boolean',
@@ -185,7 +190,7 @@ yargs
         default: false
       })
   }, async (argv: any) => {
-    await new Environment(argv.name).build(argv.docker)
+    await new Environment(argv.name).build(argv.store, argv.docker)
     info(`Environment "${argv.name}" built`)
   })
 

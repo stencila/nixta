@@ -5,6 +5,6 @@
 /demo.cast
 /dist
 /docs
-/nixstore
+/nixster.tgz
+/nixroot
 /node_modules
-/node_modules.tar.gz

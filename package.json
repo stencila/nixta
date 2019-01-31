@@ -13,7 +13,8 @@
     "cover": "jest --collectCoverage",
     "build": "npm run build:dist && npm run build:bins",
     "build:dist": "tsc && cp -TRv src/static/ dist/static/",
-    "build:bins": "tar czf node_modules.tar.gz node_modules/better-sqlite3 node_modules/integer node_modules/node-pty && pkg --target=node10 --out-path=build .",
+    "build:tgz": "tar czf nixster.tgz envs node_modules/better-sqlite3 node_modules/integer node_modules/node-pty",
+    "build:bins": "npm run build:tgz && pkg --target=node10 --out-path=build .",
     "contributors:add": "all-contributors add",
     "docs": "markdown-toc -i --maxdepth=4 README.md && typedoc --readme README.md --mode file --out ./docs ./src",
     "serve:dev": "ts-node-dev src/cli.ts serve",
@@ -70,6 +71,7 @@
     "express": "^4.16.4",
     "express-async-handler": "^1.1.4",
     "express-ws": "^4.0.0",
+    "fs-extra": "^7.0.1",
     "glob": "^7.1.3",
     "js-yaml": "^3.12.1",
     "mkdirp": "^0.5.1",
@@ -82,9 +84,8 @@
   },
   "pkg": {
     "assets": [
-      "./envs/**/*",
       "./dist/static/**/*",
-      "./node_modules.tar.gz"
+      "./nixster.tgz"
     ]
   }
 }

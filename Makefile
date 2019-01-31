@@ -27,25 +27,31 @@ docker:
 docker-push:
 	docker push stencila/nixster
 
-# Build the Nixster environments within the local `nixstore` directory
+# Build the Nixster environments within the local `nixroot` directory
 # Currently this builds the `multi-mega` environment but in the future it
-# may build all environments
+# may build all environments.
 # The --privileged flag is necessary to avoid `error: cloning builder process: Operation not permitted`
 # (see https://github.com/NixOS/nix/issues/2636 and other issues)
+# This mounts the local ./nixroot directory and tells Nixster (and thus Nix :) to build into it
 docker-build:
-	docker run --rm --interactive --tty --volume $$PWD/nixstore:/nixstore --privileged stencila/nixster nixster build multi-mega
+	docker run --rm --interactive --tty \
+		--privileged \
+		--volume $$PWD/nixroot:/nixroot \
+		stencila/nixster nixster build multi-mega --store /nixroot
 
 # Run the Nixster server 
 docker-serve:
 	docker run --rm --interactive --tty \
-		--volume $$PWD/nixstore:/nixstore \
 		--volume /var/run/docker.sock:/var/run/docker.sock \
 		--publish 3000:3000 \
 		stencila/nixster nixster serve
 
 # Interact with the container in a Bash shell. Useful for debugging build errors
 docker-interact:
-	docker run --rm --interactive --tty --volume $$PWD/nixstore:/nixstore --privileged stencila/nixster bash
+	docker run --rm --interactive --tty \
+		--privileged \
+		--volume $$PWD/nixroot:/nixroot \
+		stencila/nixster bash
 
 docs:
 	npm run docs

@@ -13,24 +13,21 @@
  *   - https://github.com/JoshuaWise/better-sqlite3/issues/173
  *   - `package.json`
  */
-import fs from 'fs'
 import path from 'path'
 
+import fs from 'fs-extra'
 import tar from 'tar'
-import mkdirp from 'mkdirp'
 
-if (
-  (process.mainModule && process.mainModule.id.endsWith('.exe') || process.hasOwnProperty('pkg')) &&
-  fs.existsSync(path.join('/', 'snapshot'))
-) {
-  const modules = path.join(path.dirname(process.execPath), 'node_modules')
-  if (!fs.existsSync(modules)) {
-    mkdirp.sync(modules)
-    tar.x({
-      sync: true,
-      file: path.join('/', 'snapshot', 'nixster', 'node_modules.tar.gz'),
-      strip: 1,
-      C: modules
-    })
-  }
+export const packaged = (
+  process.mainModule && process.mainModule.id.endsWith('.exe') || process.hasOwnProperty('pkg')
+) && fs.existsSync(path.join('/', 'snapshot'))
+
+export const home = packaged ? path.dirname(process.execPath) : path.dirname(__dirname)
+
+if(packaged && !fs.existsSync(path.join(home, 'node_modules'))) {
+  tar.x({
+    sync: true,
+    file: path.join('/', 'snapshot', 'nixster', 'nixster.tgz'),
+    C: home
+  })
 }

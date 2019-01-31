@@ -241,24 +241,17 @@ export async function search (term: string, type: string = '', limit: number = 1
 }
 
 /**
- * Has the environment been built yet?
- *
- * @param env The environment name
- */
-export async function built (env: string): Promise<boolean> {
-  return (await location(env)).length > 0
-}
-
-/**
  * Get the location of an environment within the Nix store
  *
  * @param env The environment name
+ * @returns The path to the environment's directory in the Nix store.
  */
 export async function location (env: string): Promise<string> {
   const profile = path.join(profiles, env)
-  if (!fs.existsSync(profile)) return ''
-  const readlink = await spawn('readlink', ['-f', profile])
-  return readlink
+  if (!fs.existsSync(profile)) throw new Error(`Profile for environment "${env}" not exist at "${profile}"`)
+  const location = await spawn('readlink', ['-f', profile])
+  if (location.length === 0) throw new Error(`Could not resolve location of environment "${env}" from the profile "${profile}"`)
+  return location
 }
 
 /**
@@ -267,7 +260,7 @@ export async function location (env: string): Promise<string> {
  * @param env The environment name
  * @param pkgs An array of normalized package names
  */
-export async function install (env: string, pkgs: Array<string>, clean: boolean = false) {
+export async function install (env: string, pkgs: Array<string>, clean: boolean = false, store?: string) {
   let channels: {[key: string]: any} = {}
   for (let pkg of pkgs) {
     let matches = await match(pkg)
@@ -293,6 +286,10 @@ export async function install (env: string, pkgs: Array<string>, clean: boolean 
       '--profile', path.join(profiles, env)
     ]
     if (clean) args = args.concat('--remove-all')
+    if (store) {
+      // The store argument must be an absolute path so we ensure that here.
+      args = args.concat('--store', path.resolve(store))
+    }
     args = args.concat('--attr', channels[channel].map((pkg: any) => pkg.attr))
 
     await spawn('nix-env', args, {

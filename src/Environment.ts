@@ -11,11 +11,9 @@ import * as pty from 'node-pty'
 import tmp from 'tmp'
 import yaml from 'js-yaml'
 
+import {home} from './boot'
 import spawn from './spawn'
 import * as nix from './nix'
-
-// The home directory for environments
-let home = path.join(path.dirname(__dirname), 'envs')
 
 export enum Platform {
   UNIX, WIN, DOCKER
@@ -104,20 +102,10 @@ export default class Environment {
   }
 
   /**
-   * Get or set the ome directory for environments
-   *
-   * @param value Value for home directory
-   */
-  static home (value?: string): string {
-    if (value) home = value
-    return home
-  }
-
-  /**
    * Path to the environment specification files
    */
   path (): string {
-    return path.join(Environment.home(), this.name) + '.yaml'
+    return path.join(home, 'envs', this.name + '.yaml')
   }
 
   /**
@@ -137,7 +125,7 @@ export default class Environment {
     if (this.adds && this.adds.length === 0) this.adds = undefined
     if (this.removes && this.removes.length === 0) this.removes = undefined
 
-    mkdirp.sync(Environment.home())
+    mkdirp.sync(path.join(home, 'envs'))
     const yml = yaml.safeDump(this, { skipInvalid: true })
     fs.writeFileSync(this.path(), yml)
     return this
@@ -180,13 +168,13 @@ export default class Environment {
    * List the environments on this machine
    */
   static async envs (): Promise<Array<any>> {
-    const names = glob.sync('*.yaml', { cwd: Environment.home() }).map(file => file.slice(0, -5))
+    const names = glob.sync('*.yaml', { cwd: path.join(home, 'envs') }).map(file => file.slice(0, -5))
     const envs = []
     for (let name of names) {
       const env = new Environment(name)
       envs.push(Object.assign({}, env, {
         path: env.path(),
-        built: await nix.built(name),
+        built: await env.built(),
         location: await nix.location(name)
       }))
     }
@@ -313,8 +301,8 @@ export default class Environment {
    *
    * @param docker Also build a Docker container for the environment?
    */
-  async build (docker: boolean = false): Promise<Environment> {
-    await nix.install(this.name, this.pkgs(), true)
+  async build (store?: string, docker: boolean = false): Promise<Environment> {
+    await nix.install(this.name, this.pkgs(), true, store)
 
     if (docker) {
       // TODO: complete implementation of this, using these files...
@@ -338,6 +326,18 @@ export default class Environment {
   }
 
   /**
+   * Has this environment been built?
+   */
+  async built (): Promise<boolean> {
+    try {
+      await nix.location(this.name)
+      return true
+    } catch {
+      return false
+    }
+  }
+
+  /**
    * Upgrade all packages in the environment
    *
    * @param pkgs A list of packages to upgrade
@@ -358,7 +358,7 @@ export default class Environment {
    *
    * @param pure Should the shell that this command is executed in be 'pure'?
    */
-  async vars (pure: boolean = false) : Promise<{[key: string]: string}> {
+  async vars (pure: boolean = false): Promise<{[key: string]: string}> {
     const location = await nix.location(this.name)
 
     let PATH = `${location}/bin:${location}/sbin`
@@ -379,6 +379,8 @@ export default class Environment {
    * @param pure Should the shell that this command is executed in be 'pure'?
    */
   async within (command: string, pure: boolean = false) {
+    if (!this.built()) throw new Error(`Environment "${this.name}" has not be built yet.`)
+
     // Get the path to bash because it may not be available in
     // the PATH of a pure shell
     let shell = await spawn('which', ['bash'])
@@ -395,6 +397,8 @@ export default class Environment {
    * @param sessionParameters Parameters of the session
    */
   async enter (sessionParameters: SessionParameters) {
+    if (!this.built()) throw new Error(`Environment "${this.name}" has not be built yet.`)
+
     let { command, platform, pure, stdin, stdout } = sessionParameters
     const location = await nix.location(this.name)
 
