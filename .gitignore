@@ -1,3 +1,4 @@
+/*.idea
 /*.sqlite3
 /build
 /coverage
@@ -5,6 +6,6 @@
 /demo.cast
 /dist
 /docs
-/nixster.tgz
 /nixroot
+/nixster.tgz
 /node_modules
