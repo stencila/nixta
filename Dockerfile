@@ -18,7 +18,6 @@ RUN touch dummy.js && npx pkg dummy.js --target=node10 --out-path=build && rm -r
 # Copy everything and build!
 COPY envs envs/
 COPY src src/
-COPY src static/
 COPY tsconfig.json .
 RUN npm run build
 
@@ -31,11 +30,13 @@ RUN npm run build
 
 FROM ubuntu:18.04
 
+ENV NIX_VERSION=2.2.1 NIX_SHA=e229e28f250cad684c278c9007b07a24eb4ead239280c237ed2245871eca79e0
 RUN apt-get update \
- && DEBIAN_FRONTEND=noninteractive apt-get install -y wget ca-certificates \
- && wget https://nixos.org/releases/nix/nix-2.2.1/nix-2.2.1-x86_64-linux.tar.bz2 \
- && echo "e229e28f250cad684c278c9007b07a24eb4ead239280c237ed2245871eca79e0 nix-2.2.1-x86_64-linux.tar.bz2" | sha256sum -c \
- && tar xjf nix-*-x86_64-linux.tar.bz2
+ && DEBIAN_FRONTEND=noninteractive apt-get install -y wget ca-certificates xz-utils \
+ && wget https://nixos.org/releases/nix/nix-${NIX_VERSION}/nix-${NIX_VERSION}-x86_64-linux.tar.bz2 \
+ && echo "${NIX_SHA} nix-${NIX_VERSION}-x86_64-linux.tar.bz2" | sha256sum -c \
+ && tar xjf nix-${NIX_VERSION}-x86_64-linux.tar.bz2 \
+ && rm nix-${NIX_VERSION}-x86_64-linux.tar.bz2
 
 # Create a non-root user
 RUN groupadd --gid 30000 nixbld \
@@ -48,25 +49,24 @@ ENV USER root
 RUN mkdir -m 0755 /etc/nix \
  && echo 'sandbox = false' > /etc/nix/nix.conf
 
-# `xz-utils` is required for Nix to decompress tar files
-RUN apt-get update \
- && DEBIAN_FRONTEND=noninteractive apt-get install -y xz-utils
-
 #USER nixster
 
-RUN USER=root sh nix-*-x86_64-linux/install
+RUN USER=root sh nix-*-x86_64-linux/install \
+ && rm -rf nix-${NIX_VERSION}-x86_64-linux
 #RUN /nix/var/nix/profiles/default/bin/nix-collect-garbage --delete-old \
 # && /nix/var/nix/profiles/default/bin/nix-store --optimise \
 # && /nix/var/nix/profiles/default/bin/nix-store --verify --check-contents
 
 # Install Docker (only the client is used in this image, the daemon runs elsewhere)
 # HT to https://stackoverflow.com/a/43594065
-ENV DOCKERVERSION=18.09.1
-RUN wget https://download.docker.com/linux/static/stable/x86_64/docker-${DOCKERVERSION}.tgz \
- && tar xzvf docker-${DOCKERVERSION}.tgz --strip 1 -C /usr/local/bin docker/docker \
- && rm docker-${DOCKERVERSION}.tgz
+ENV DOCKER_VERSION=18.09.1
+RUN wget https://download.docker.com/linux/static/stable/x86_64/docker-${DOCKER_VERSION}.tgz \
+ && tar xzvf docker-${DOCKER_VERSION}.tgz --strip 1 -C /usr/local/bin docker/docker \
+ && rm docker-${DOCKER_VERSION}.tgz
 
 COPY --from=builder /nixster/build/nixster /home/nixster
+
+WORKDIR /home/nixster
 
 # Prepend application directory and Nix profile to PATH
 ENV PATH=/home/nixster:/root/.nix-profile/bin:/root/.nix-profile/sbin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
@@ -81,5 +81,4 @@ RUN nix-channel --add https://nixos.org/channels/nixos-18.09 \
  && nix-channel --update \
  && nixster update nixos-18.09
 
-WORKDIR /home/nixster
 CMD nixster serve

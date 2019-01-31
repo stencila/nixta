@@ -1,17 +1,35 @@
-version: "3"
+version: "3.2"
+
 services:
 
   nixster:
     build: .
+    # Server needs to listen on 0.0.0.0 to accept connections
+    # from outside of the container
+    command: nixster serve --address 0.0.0.0
     ports:
       - "3000:3000"
+    # Tell the Docker client how to connect to the Docker daemon
+    # in the sibling container
     environment:
       DOCKER_HOST: tcp://docker-in-docker:2375
-    command: nixster serve
+    # Server needs read access to `/nix` to resolve the location for an
+    # environment (i.e. resolve the symlink from a `/nix/profiles` to `/nix/store/*-user-environment`)
+    # so that `PATH` etc can be set properly.
+    volumes:
+      - type: bind
+        source: ./nixroot/nix
+        target: /nix
+        read_only: true
 
   docker-in-docker:
     image: docker:dind
+    # The `dind` image needs to be run privileged
     privileged: true
-    expose:
-      - 2375
-      - 2376
+    # Docker daemon needs read access to `/nix` so that it can mount 
+    # `/nix/store` into the user session containers
+    volumes:
+      - type: bind
+        source: ./nixroot/nix
+        target: /nix
+        read_only: true
