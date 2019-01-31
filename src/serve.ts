@@ -1,29 +1,9 @@
 import path from 'path'
 import stream from 'stream'
-import yargs from 'yargs'
 
 import express from 'express'
 
 import Environment, { SessionParameters, Platform } from './Environment'
-
-const DEFAULT_PORT = 3000
-
-let argv = yargs.scriptName('nixster-serve')
-    .help('h')
-    .alias('h', 'help')
-    .option('port', {
-      alias: 'p',
-      default: DEFAULT_PORT,
-      describe: 'Port to listen on',
-      type: 'number'
-    })
-    .option('address', {
-      alias: 'a',
-      default: 'localhost',
-      describe: 'Host address to listen on',
-      type: 'string'
-    })
-    .argv
 
 const app = express()
 const expressWs = require('express-ws')(app)
@@ -180,5 +160,13 @@ expressWs.app.post('/stop', async (req: express.Request, res: express.Response) 
 
 })
 
-app.listen(argv.port, argv.address)
-console.info(`Listening on http://${argv.address}:${argv.port}`)
+/**
+ * Start the server
+ *
+ * @param port Port to listen on
+ * @param address Address to listen on
+ */
+export default function serve (port: number = 3000, address: string = '') {
+  app.listen(port, address)
+  return { port, address }
+}

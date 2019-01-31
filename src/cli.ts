@@ -16,8 +16,9 @@ import ellipsize from 'ellipsize'
 import yargs from 'yargs'
 import yaml from 'js-yaml'
 
-import Environment, { SessionParameters, Platform } from './Environment'
 import * as nix from './nix'
+import Environment, { SessionParameters, Platform } from './Environment'
+import serve from './serve'
 
 const VERSION = require('../package').version
 
@@ -400,9 +401,23 @@ yargs
   })
 
   .command('serve', 'Serve', (yargs: any) => {
+    yargs
+      .option('port', {
+        alias: 'p',
+        default: 3000,
+        describe: 'Port to listen on',
+        type: 'number'
+      })
+      .option('address', {
+        alias: 'a',
+        default: 'localhost',
+        describe: 'Host address to listen on',
+        type: 'string'
+      })
     outputOptions(yargs)
   }, async (argv: any) => {
-    require('./serve')
+    const { port, address } = serve(argv.port, argv.address)
+    output({ port, address }, argv, result => `⚡ Listening on http://${address}:${port}`)
   })
 
   .parse()
@@ -469,19 +484,16 @@ function outputOptions (yargs: any) {
 
     .option('pretty', {
       describe: 'Output using pretty formatting',
-      alias: 'p',
       type: 'boolean'
     })
 
     .option('yaml', {
       describe: 'Output as YAML',
-      alias: 'y',
       type: 'boolean'
     })
 
     .option('json', {
       describe: 'Output as JSON',
-      alias: 'j',
       type: 'boolean'
     })
 

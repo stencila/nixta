@@ -365,7 +365,7 @@ export default class Environment {
    */
   async built (): Promise<boolean> {
     try {
-      await nix.location(this.name)
+      nix.location(this.name)
       return true
     } catch {
       return false
