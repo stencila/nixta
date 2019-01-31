@@ -172,7 +172,7 @@ export default class Environment {
    * @param options Optional attributes for the environment e.g. `packages`, `meta`
    * @param force If the environment already exists should it be overitten?
    */
-  static async create (name: string, options: {[key: string]: any} = {}, force: boolean = false): Promise<Environment> {
+  static async create (name: string, options: { [key: string]: any } = {}, force: boolean = false): Promise<Environment> {
     const env = new Environment(name, false)
 
     if (!force) {
@@ -380,7 +380,7 @@ export default class Environment {
    *
    * @param pure Should the shell that this command is executed in be 'pure'?
    */
-  async vars (pure: boolean = false): Promise<{[key: string]: string}> {
+  async vars (pure: boolean = false): Promise<{ [key: string]: string }> {
     const location = nix.location(this.name)
 
     let PATH = `${location}/bin:${location}/sbin`
@@ -422,25 +422,25 @@ export default class Environment {
     const { command, cpuShares, memoryLimit } = sessionParameters
     const nixLocation = nix.location(this.name)
     const shellArgs = [
-          dockerCommand, '--interactive', '--tty', '--rm',
-          // Prepend the environment path to the PATH variable
-          '--env', `PATH=${nixLocation}/bin:${nixLocation}/sbin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin`,
-          // We also need to tell R where to find libraries
-          '--env', `R_LIBS_SITE=${nixLocation}/library`,
-          // Read-only bind mount of the Nix store
-          '--volume', '/nix/store:/nix/store:ro',
-          // Apply CPU shares
-          `--cpu-shares=${cpuShares}`,
-          // Apply memory limit
-          `--memory=${memoryLimit}`,
-          // We use Alpine Linux as a base image because it is very small but has some basic
-          // shell utilities (lkike ls and uname) that are good for debugging but also sometimes
-          // required for things like R
-          'alpine'
-        ].concat(
-          // Command to execute in the container
-          command ? command.split(' ') : DOCKER_DEFAULT_COMMAND
-        )
+      dockerCommand, '--interactive', '--tty', '--rm',
+      // Prepend the environment path to the PATH variable
+      '--env', `PATH=${nixLocation}/bin:${nixLocation}/sbin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin`,
+      // We also need to tell R where to find libraries
+      '--env', `R_LIBS_SITE=${nixLocation}/library`,
+      // Read-only bind mount of the Nix store
+      '--volume', '/nix/store:/nix/store:ro',
+      // Apply CPU shares
+      `--cpu-shares=${cpuShares}`,
+      // Apply memory limit
+      `--memory=${memoryLimit}`,
+      // We use Alpine Linux as a base image because it is very small but has some basic
+      // shell utilities (lkike ls and uname) that are good for debugging but also sometimes
+      // required for things like R
+      'alpine'
+    ].concat(
+        // Command to execute in the container
+        command ? command.split(' ') : DOCKER_DEFAULT_COMMAND
+    )
 
     if (daemonize) shellArgs.splice(1, 0, '-d')
 
@@ -562,9 +562,9 @@ export default class Environment {
   /**
    * Determine if a Docker container is running using 'docker ps'
    *
-   * @param containerId The ID of the container, can either be the long or truncated version.
+   * @param containerId The ID of the container, must be truncated version (12 alphanumeric characters).
    */
-  private async checkContainerRunning (containerId: string): Promise<boolean> {
+  async containerIsRunning (containerId: string): Promise<boolean> {
     const containerRegex = new RegExp(/^[^_\W]{12}$/)
     if (containerRegex.exec(containerId) === null) {
       throw new Error(`'${containerId}' is not a valid docker container ID.`)
@@ -591,6 +591,16 @@ export default class Environment {
 
     const dockerProcess = await spawn('docker', shellArgs)
     return dockerProcess.toString().trim().substr(0, DOCKER_CONTAINER_ID_SHORT_LENGTH)
+  }
+
+  /**
+   * Stop a running Docker container. Return true if the container was stopped or false if there was an error.
+   *
+   * @param containerId
+   */
+  async stopContainer (containerId: string): Promise<boolean> {
+    const dockerStopProcess = await spawn('docker', ['stop', containerId])
+    return dockerStopProcess.toString().trim().substr(0, DOCKER_CONTAINER_ID_SHORT_LENGTH) === containerId.substr(0, DOCKER_CONTAINER_ID_SHORT_LENGTH)
   }
 
   /**
