@@ -32,7 +32,8 @@ docker-push:
 # may build all environments.
 # The --privileged flag is necessary to avoid `error: cloning builder process: Operation not permitted`
 # (see https://github.com/NixOS/nix/issues/2636 and other issues)
-# This mounts the local ./nixroot directory and tells Nixster (and thus Nix :) to build into it
+# This mounts the local `./nixroot` directory and tells Nixster (and thus Nix :) to build into it.
+# We need to build into `/nixroot/nix/store` because in the container, `/nix/store` has `nix-env` which is used for the build.
 docker-build:
 	docker run --rm --interactive --tty \
 		--privileged \

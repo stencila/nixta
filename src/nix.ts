@@ -283,15 +283,23 @@ export async function install (env: string, pkgs: Array<string>, clean: boolean 
   for (let channel in channels) {
     let args = [
       '--install',
-      '--file', `channel:${channel}`,
-      '--profile', path.join(profiles, env)
+      '--file', `channel:${channel}`
     ]
     if (clean) args = args.concat('--remove-all')
+    let profile
     if (store) {
       // The store argument must be an absolute path so we ensure that here.
-      args = args.concat('--store', path.resolve(store))
+      const nixroot = path.resolve(store)
+      args = args.concat('--store', nixroot)
+      // The profile needs to be saved into the same nixroot as well...
+      profile = path.join(nixroot, 'nix', 'profiles', env)
+    } else {
+      profile = path.join(profiles, env)
     }
-    args = args.concat('--attr', channels[channel].map((pkg: any) => pkg.attr))
+    args = args.concat(
+      '--profile', profile,
+      '--attr', channels[channel].map((pkg: any) => pkg.attr)
+    )
 
     await spawn('nix-env', args, {
       stdio: 'inherit'
