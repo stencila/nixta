@@ -172,10 +172,11 @@ export default class Environment {
     const envs = []
     for (let name of names) {
       const env = new Environment(name)
+      const built = await env.built()
       envs.push(Object.assign({}, env, {
         path: env.path(),
-        built: await env.built(),
-        location: await nix.location(name)
+        built: built,
+        location: built ? await nix.location(name) : '-'
       }))
     }
     return envs
@@ -456,10 +457,17 @@ export default class Environment {
       // During development you'll need to use ---pure=false so that
       // node is available to run Nixster. In production, when a user
       // has installed a binary, this shouldn't be necessary
-      let nixsterPath = await spawn('which', ['nixster'])
-      const tempRcFile = tmp.fileSync()
-      fs.writeFileSync(tempRcFile.name, `alias nixster="${nixsterPath.toString().trim()}"\n`)
-      shellArgs.push('--rcfile', tempRcFile.name)
+      let nixsterPath
+      try {
+        nixsterPath = await spawn('which', ['nixster'])
+      } catch (error) {
+        // Nixster not on path
+      }
+      if (nixsterPath) {
+        const tempRcFile = tmp.fileSync()
+        fs.writeFileSync(tempRcFile.name, `alias nixster="${nixsterPath.toString().trim()}"\n`)
+        shellArgs.push('--rcfile', tempRcFile.name)
+      }
     }
 
     // Environment variables

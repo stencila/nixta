@@ -250,7 +250,7 @@ export async function location (env: string): Promise<string> {
   const profile = path.join(profiles, env)
   if (!fs.existsSync(profile)) throw new Error(`Profile for environment "${env}" not exist at "${profile}"`)
   const location = await spawn('readlink', ['-f', profile])
-  if (location.length === 0) throw new Error(`Could not resolve location of environment "${env}" from the profile "${profile}"`)
+  if (location.trim().length === 0) throw new Error(`Could not resolve location of environment "${env}" from the profile "${profile}"`)
   return location
 }
 
