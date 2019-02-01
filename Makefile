@@ -40,12 +40,13 @@ docker-build:
 		--volume $$PWD/nixroot:/nixroot \
 		stencila/nixster nixster build multi-mega --store /nixroot
 
-# Run the Nixster server 
+# Run the Nixster server
 docker-serve:
 	docker run --rm --interactive --tty \
 		--volume /var/run/docker.sock:/var/run/docker.sock \
+		--volume $$PWD/nixroot:/nixroot:ro \
 		--publish 3000:3000 \
-		stencila/nixster nixster serve
+		stencila/nixster nixster serve --address 0.0.0.0
 
 # Interact with the container in a Bash shell. Useful for debugging build errors
 docker-interact:

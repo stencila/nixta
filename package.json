@@ -16,7 +16,9 @@
     "build:tgz": "tar czf nixster.tgz envs node_modules/better-sqlite3 node_modules/integer node_modules/node-pty",
     "build:bins": "npm run build:tgz && pkg --target=node10 --out-path=build .",
     "contributors:add": "all-contributors add",
-    "docs": "markdown-toc -i --maxdepth=4 README.md && typedoc --readme README.md --mode file --out ./docs ./src",
+    "docs:readme": "markdown-toc -i --maxdepth=4 README.md",
+    "docs:contrib": "markdown-toc -i --maxdepth=4 CONTRIBUTING.md",
+    "docs": "npm run docs:readme && npm run docs:contrib && typedoc --readme README.md --mode file --out ./docs ./src",
     "serve:dev": "ts-node-dev src/cli.ts serve",
     "serve:dist": "node dist/cli.js serve"
   },

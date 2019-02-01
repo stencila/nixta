@@ -3,6 +3,7 @@ version: "3.2"
 services:
 
   nixster:
+    image: stencila/nixster
     build: .
     # Server needs to listen on 0.0.0.0 to accept connections
     # from outside of the container
@@ -24,7 +25,7 @@ services:
 
   docker-in-docker:
     image: docker:dind
-    # The `dind` image needs to be run privileged
+    # The `dind` image always needs to be run privileged
     privileged: true
     # Docker daemon needs read access to `/nix` so that it can mount 
     # `/nix/store` into the user session containers
