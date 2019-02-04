@@ -1,7 +1,10 @@
-version: "3.2"
+# A Docker Compose configuration file
+# Useful for testing container orchestation
 
+version: "3.2"
 services:
 
+  # Nixster server
   nixster:
     image: stencila/nixster
     build: .
@@ -23,6 +26,7 @@ services:
         target: /nix
         read_only: true
 
+  # Docker-in-Docker (dind) to build Docker images
   docker-in-docker:
     image: docker:dind
     # The `dind` image always needs to be run privileged

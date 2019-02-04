@@ -1,0 +1,37 @@
+# An example Kubernetes deployment for building Nixster environments
+# Designed for testing using Minikube but should
+# require little modification for use in a production cluster.
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: nixster-build-job
+spec:
+  backoffLimit: 4
+  template:
+    spec:
+      restartPolicy: Never
+      # Prevent Kubernetes setting `NIXSTER_SERVICE_*` environment variables
+      # which makes the `nixster` CLI tool complain about unrecognised options
+      # because of the `NIXTER_` prefix clash.
+      enableServiceLinks: false
+      containers:
+        # Build container with write access to the `/nixroot` directory
+        - name: build-container
+          image: stencila/nixster
+          # Don't pull image, instead use the one built locally
+          imagePullPolicy: Never
+          # Build the environment into the `/nixroot` directory
+          command: ["nixster"]
+          args: ["build", "multi-mega", "--store", "/nixroot"]
+          volumeMounts:
+            - name: nix-volume
+              mountPath: /nixroot
+          # Build needs to be priviledged
+          securityContext:
+            privileged: true
+      # We're using an empty directory here just for testing
+      # In production this is likely to be a Persistent Volume Claim (PVC)
+      volumes:
+        - name: nix-volume
+          emptyDir: {}

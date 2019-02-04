@@ -96,6 +96,77 @@ docker-compose up --build
 
 Use `Ctrl+C` to stop both containers. The `--build` flag ensures that you are using the latest version of the Nixster image defined in the `Dockerfile`.
 
+### Local Kubernetes cluster testing
+
+You can test deployment of Nixster to a Kubernetes cluster using Minikube. Install [`minikube`](https://kubernetes.io/docs/tasks/tools/install-minikube/) and [`kubectl`](https://kubernetes.io/docs/tasks/tools/install-kubectl/).
+
+Start Minikube:
+
+```bash
+minikube start
+```
+
+Then set various `DOCKER_*` environment variables in the current terminal session so that the `docker` client uses the Docker daemon inside that cluster:
+
+```bash
+eval $(minikube docker-env)
+```
+
+Using the Docker daemon inside the Minikube cluster avoids having to push/pull to a remote Docker image registry each time you change the Nixster source code. Now you can rebuild the Docker image inside the Minikube cluster using:
+
+```bash
+docker build . --tag stencila/nixster
+```
+
+Mount the local `./nixroot` directory into the Minikube cluster (see the section above on building environments first). Since this needs to keep running, you'll need to run this in a separate terminal:
+
+```bash
+minikube mount $PWD/nixroot:/nixroot
+```
+
+Now deploy to the Minikube cluster:
+
+```bash
+kubectl apply -f minikube-serve.yml
+```
+
+Check the `Deployment` is ready (the dashboard can be useful for this too: `minikube dashboard`),
+
+```bash
+$ kubectl get deployments
+NAME                 READY     UP-TO-DATE   AVAILABLE   AGE
+nixster-serve-deployment   1/1       1            1           2m32s
+```
+
+You can then get the URL of the server (so that you can visit in your browser or using `curl`):
+
+```bash
+minikube service nixster-service --url
+```
+
+There is also a `Job` for building environments. Test it on Minikube using:
+
+```bash
+kubectl apply -f minikube-job.yml
+```
+
+And check it's progress using the dashboard or:
+
+```bash
+$ kubectl get jobs
+NAME                COMPLETIONS   DURATION   AGE
+nixster-build-job   0/1           7m31s      7m31s
+```
+
+```bash
+kubectl get jobs
+```
+
+When you're done testing, stop Minikube with:
+
+```bash
+minikube stop
+```
 
 ## Updating the package distribution
 
