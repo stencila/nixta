@@ -1,0 +1,80 @@
+# An example Kubernetes deployment for serving Nixster
+# Designed for testing using Minikube but should
+# require little modification for use in a production cluster.
+
+# Server deployment for serving sessions
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: nixster-serve-deployment
+spec:
+  template:
+    metadata:
+      labels:
+        app: nixster-app
+    spec:
+      containers:
+
+        # Nixster server
+        - name: server-container
+          image: stencila/nixster
+          # Don't pull image, instead use the one built locally
+          imagePullPolicy: Never
+          # Server needs to listen on 0.0.0.0 to accept connections
+          # from outside of the container
+          command: ["nixster"]
+          args: ["serve", "--address", "0.0.0.0"]
+          # Tell the Docker client how to connect to the Docker daemon
+          # in the sibling container
+          env:
+            - name: DOCKER_HOST
+              value: tcp://127.0.0.1:2375
+          ports:
+            - containerPort: 3000
+          # Server needs read access to `/nix` to resolve the location for an
+          # environment (i.e. resolve the symlink from a `/nix/profiles` to `/nix/store/*-user-environment`)
+          # so that `PATH` etc can be set properly.
+          volumeMounts:
+            - name: nix-volume
+              mountPath: /nix
+              readOnly: true
+
+        # Docker-in-Docker (dind) to build Docker images
+        - name: docker-container
+          image: docker:dind
+          securityContext:
+            privileged: true
+          ports:
+            - containerPort: 2375
+          # Docker daemon needs read access to `/nix` so that it can mount 
+          # `/nix/store` into the user session containers
+          volumeMounts:
+            - name: nix-volume
+              mountPath: /nix
+              readOnly: true
+
+      # When using Minikube you can mount a local `./nixroot` into the cluster using
+      #    minikube mount $PWD/nixroot:/nixroot
+      # In production this is likely to be a Persistent Volume Claim (PVC)
+      volumes:
+        - name: nix-volume
+          hostPath:
+            path: /nixroot/nix
+
+---
+
+# Expose the server as a `Service` for testing
+# outside of Minikube
+
+kind: Service
+apiVersion: v1
+metadata:
+  name: nixster-service
+spec:
+  type: NodePort
+  selector:
+    app: nixster-app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000
