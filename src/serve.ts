@@ -3,7 +3,7 @@ import stream from 'stream'
 
 import express from 'express'
 
-import Environment, { SessionParameters, Platform } from './Environment'
+import Environment, { Platform, SessionParameters } from './Environment'
 
 const app = express()
 const expressWs = require('express-ws')(app)
@@ -14,6 +14,8 @@ app.use(express.static(path.join(__dirname, 'static')))
 // JSON Body Parsing
 const jsonParser = require('body-parser').json()
 app.use(jsonParser)
+
+const DEFAULT_ENVIRONMENT = 'multi-mega'
 
 /**
  * Validates that all the `requiredParameters` are properties of `body`.
@@ -76,6 +78,7 @@ function doRequestValidation (request: express.Request, response: express.Respon
 // todo: rename shell to interact
 // Instantiate shell and set up data handlers
 expressWs.app.ws('/shell', async (ws: any, req: express.Request) => {
+  const environment = req.query.environment || DEFAULT_ENVIRONMENT
   try {
     // Create streams that pipe between the Websocket and
     // the pseudo terminal
@@ -94,14 +97,50 @@ expressWs.app.ws('/shell', async (ws: any, req: express.Request) => {
       }
     })
 
-    // For now, use an arbitrary, small environment for testing purposes.
-    let env = new Environment('r')
+    let env = new Environment(environment)
 
     const sessionParameters = new SessionParameters()
-    sessionParameters.platform = Platform.DOCKER
+    sessionParameters.platform = req.query.platform === undefined ? Platform.UNIX : req.query.platform
     sessionParameters.stdin = stdin
     sessionParameters.stdout = stdout
     await env.enter(sessionParameters)
+  } catch (error) {
+    console.error(error)
+  }
+})
+
+// Instantiate shell and set up data handlers
+expressWs.app.ws('/interact', async (ws: any, req: express.Request) => {
+  const environment = req.query.environment || DEFAULT_ENVIRONMENT
+  const containerId = req.query.containerId || ''
+
+  try {
+    // Create streams that pipe between the Websocket and
+    // the pseudo terminal
+
+    // A pseudo stdin that receives data from the Websocket
+    const stdin = new stream.PassThrough()
+    ws.on('message', (msg: any) => {
+      stdin.write(msg)
+    })
+
+    // A pseudo stdout that writes data to the Websocket
+    const stdout = new stream.Writable({
+      write (chunk: Buffer, encoding: any, callback: any) {
+        ws.send(chunk)
+        callback()
+      }
+    })
+
+    let env = new Environment(environment)
+
+    const sessionParameters = new SessionParameters()
+    sessionParameters.platform = Platform.DOCKER
+    sessionParameters.containerId = containerId
+    sessionParameters.stdin = stdin
+    sessionParameters.stdout = stdout
+
+    await env.attach(sessionParameters)
   } catch (error) {
     console.error(error)
   }
@@ -115,7 +154,7 @@ app.use((error: Error, req: express.Request, res: express.Response, next: any) =
   next(error)
 })
 
-expressWs.app.post('/execute', jsonParser, async (req: express.Request, res: express.Response) => {
+expressWs.app.post('/start', async (req: express.Request, res: express.Response) => {
   if (!doRequestValidation(req, res, ['environmentId'])) {
     return res.end()
   }
@@ -126,9 +165,26 @@ expressWs.app.post('/execute', jsonParser, async (req: express.Request, res: exp
   sessionParameters.platform = Platform.DOCKER
   sessionParameters.command = req.body.command || ''
 
-  const containerId = await env.execute(sessionParameters)
+  const containerId = await env.start(sessionParameters)
   return res.json({
     containerId: containerId
+  })
+})
+
+expressWs.app.post('/execute', async (req: express.Request, res: express.Response) => {
+  if (!doRequestValidation(req, res, ['environmentId', 'containerId', 'command'])) {
+    return res.end()
+  }
+
+  const env = new Environment(req.body.environmentId)
+
+  const sessionParameters = new SessionParameters()
+  sessionParameters.platform = Platform.DOCKER
+  sessionParameters.containerId = req.body.containerId
+  sessionParameters.command = req.body.command
+
+  return res.json({
+    output: await env.execute(sessionParameters, req.body.daemonize === true)
   })
 })
 

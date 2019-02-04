@@ -427,17 +427,36 @@ export default class Environment {
   }
 
   /**
+   * Get an array suitable for passing to `spawn` to execute a docker command with environment variables for nixster
+   *
+   * @param sessionParameters SessionParameters that define the container to exec inside and the command to run
+   * @param daemonize Should the Docker command be run with the '-d' flag?
+   */
+  private getDockerExecCommand (sessionParameters: SessionParameters, daemonize: boolean): Array<string> {
+    const nixLocation = nix.location(this.name)
+    const shellArgs = [
+      'exec', '--tty',
+      // Prepend the environment path to the PATH variable
+      '--env', `PATH=${nixLocation}/bin:${nixLocation}/sbin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin`,
+      sessionParameters.containerId, sessionParameters.command
+    ]
+
+    if (daemonize) shellArgs.splice(1, 0, '-d')
+
+    return shellArgs
+  }
+
+  /**
    * Get an array suitable for passing to `spawn` to execute a docker command with default args for nixster
    *
-   * @param dockerCommand The Docker command to execute
    * @param sessionParameters SessionParameters to use for limiting Docker's resource usage
    * @param daemonize Should the Docker command be run with the '-d' flag?
    */
-  private async getDockerShellArgs (dockerCommand: string, sessionParameters: SessionParameters, daemonize: boolean = false): Promise<Array<string>> {
+  private getDockerRunCommand (sessionParameters: SessionParameters, daemonize: boolean = false): Array<string> {
     const { command, cpuShares, memoryLimit } = sessionParameters
     const nixLocation = nix.location(this.name)
     const shellArgs = [
-      dockerCommand, '--interactive', '--tty', '--rm',
+      'run', '--interactive', '--tty', '--rm',
       // Prepend the environment path to the PATH variable
       '--env', `PATH=${nixLocation}/bin:${nixLocation}/sbin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin`,
       // We also need to tell R where to find libraries
@@ -491,7 +510,7 @@ export default class Environment {
         break
       case Platform.DOCKER:
         shellName = 'docker'
-        shellArgs = await this.getDockerShellArgs('run', sessionParameters, false)
+        shellArgs = this.getDockerRunCommand(sessionParameters, false)
         break
       default:
         shellName = 'bash'
@@ -544,11 +563,26 @@ export default class Environment {
       }
     }
 
+    const shellProcess = this.runInShell(shellPath, shellArgs, vars, stdout, stdin)
+
+    if (platform === Platform.UNIX && command) shellProcess.write(command + '\r')
+  }
+
+  /**
+   * Spawn a new shell with the default setup for nixster, attaching stdout and stdin
+   *
+   * @param shellPath The command to run
+   * @param shellArgs Arguments to pass to the command in `shellpath`
+   * @param environmentVariables Environment variables to set in the shell
+   * @param stdout Stream
+   * @param stdin Stream
+   */
+  private runInShell (shellPath: string, shellArgs: Array<string>, environmentVariables: { [key: string]: string }, stdout: stream.Writable, stdin: stream.Readable) {
     const shellProcess = pty.spawn(shellPath, shellArgs, {
       name: 'xterm-color',
       cols: 120,
       rows: 30,
-      env: vars
+      env: environmentVariables
     })
     shellProcess.on('data', data => {
       stdout.write(data)
@@ -575,8 +609,23 @@ export default class Environment {
       }
       shellProcess.write(data)
     })
+    return shellProcess
+  }
 
-    if (platform === Platform.UNIX && command) shellProcess.write(command + '\r')
+  /**
+   * Attach to a running container.
+   *
+   * @param sessionParameters The stdout and stdin attributes from here are used to connect to the shell
+   */
+  async attach (sessionParameters: SessionParameters) {
+    if (sessionParameters.platform !== Platform.DOCKER) {
+      throw new Error('Attach is only valid for docker')
+    }
+
+    if (!this.containerIsRunning(sessionParameters.containerId)) {
+      throw new Error(`Container ${sessionParameters.containerId} is not running.`)
+    }
+    this.runInShell('docker', ['attach', sessionParameters.containerId], {}, sessionParameters.stdout, sessionParameters.stdin)
   }
 
   /**
@@ -602,15 +651,33 @@ export default class Environment {
    *
    * Returns the short ID of the container that is running.
    */
-  async execute (sessionParameters: SessionParameters): Promise<string> {
+  async start (sessionParameters: SessionParameters): Promise<string> {
+    if (sessionParameters.platform !== Platform.DOCKER) {
+      throw new Error('Start is only valid with the Docker platform.')
+    }
+
+    const dockerProcess = await spawn('docker', this.getDockerRunCommand(sessionParameters, true))
+    return dockerProcess.toString().trim().substr(0, DOCKER_CONTAINER_ID_SHORT_LENGTH)
+  }
+
+  /**
+   * Execute a command in a docker container. Will output the results of the command, or daemonize it in which case an
+   * empty string is returned
+   *
+   * @param sessionParameters Contains the `containerId` and `command` that define where and what to execute
+   * @param daemonize run the command in the background (pass -d flag to docker)
+   */
+  async execute (sessionParameters: SessionParameters, daemonize: boolean = false): Promise<string> {
     if (sessionParameters.platform !== Platform.DOCKER) {
       throw new Error('Execute is only valid with the Docker platform.')
     }
 
-    const shellArgs = await this.getDockerShellArgs('run', sessionParameters, true)
+    if (!this.containerIsRunning(sessionParameters.containerId)) {
+      throw new Error(`Container ${sessionParameters.containerId} is not running`)
+    }
 
-    const dockerProcess = await spawn('docker', shellArgs)
-    return dockerProcess.toString().trim().substr(0, DOCKER_CONTAINER_ID_SHORT_LENGTH)
+    const dockerProcess = await spawn('docker', this.getDockerExecCommand(sessionParameters, daemonize))
+    return dockerProcess.toString().trim()
   }
 
   /**
