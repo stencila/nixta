@@ -36,7 +36,6 @@ try {
 // Currently we're putting generate Nix profiles in the /nix directory.
 // This is somewhat arbitrary.
 const profiles = path.join('/', 'nix', 'profiles')
-mkdirp.sync(profiles)
 
 /**
  * Add a channel
@@ -249,7 +248,7 @@ export async function search (term: string, type: string = '', limit: number = 1
  */
 export function location (env: string): string {
   const profile = path.join(profiles, env)
-  if (!fs.existsSync(profile)) throw new Error(`Profile for environment "${env}" not exist at "${profile}"`)
+  if (!fs.existsSync(profile)) throw new Error(`Profile for environment "${env}" does not exist at "${profile}"`)
   const location = fs.realpathSync(profile)
   if (location.length === 0) throw new Error(`Could not resolve location of environment "${env}" from the profile "${profile}"`)
   return location
@@ -296,6 +295,8 @@ export async function install (env: string, pkgs: Array<string>, clean: boolean 
     } else {
       profile = path.join(profiles, env)
     }
+    // Ensure the profiles directory is present
+    mkdirp.sync(path.dirname(profile))
     args = args.concat(
       '--profile', profile,
       '--attr', channels[channel].map((pkg: any) => pkg.attr)
