@@ -36,6 +36,7 @@ spec:
           # so that `PATH` etc can be set properly.
           volumeMounts:
             - name: nix-volume
+              subPath: nix
               mountPath: /nix
               readOnly: true
 
@@ -50,16 +51,17 @@ spec:
           # `/nix/store` into the user session containers
           volumeMounts:
             - name: nix-volume
+              subPath: nix
               mountPath: /nix
               readOnly: true
 
-      # When using Minikube you can mount a local `./nixroot` into the cluster using
-      #    minikube mount $PWD/nixroot:/nixroot
-      # In production this is likely to be a Persistent Volume Claim (PVC)
+      # Use the ReadWriteMany PVC (even though we are only mounting
+      # as read only this seeems to be necessary it does not work 
+      # with `nixster-pvc-rom`)
       volumes:
         - name: nix-volume
-          hostPath:
-            path: /nixroot/nix
+          persistentVolumeClaim:
+            claimName: nixster-pvc-rwm
 
 ---
 

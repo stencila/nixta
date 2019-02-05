@@ -15,6 +15,15 @@ spec:
       # which makes the `nixster` CLI tool complain about unrecognised options
       # because of the `NIXTER_` prefix clash.
       enableServiceLinks: false
+      initContainers:
+        # Create the `profiles` directory
+        # This is a workaround which could be avoided by a fix in the `nixster` app
+        - name: init-nix-volumne
+          image: busybox
+          command: ["sh", "-c", "mkdir -p /nixroot/nix/profiles/"]
+          volumeMounts:
+            - name: nix-volume
+              mountPath: /nixroot
       containers:
         # Build container with write access to the `/nixroot` directory
         - name: build-container
@@ -22,16 +31,17 @@ spec:
           # Don't pull image, instead use the one built locally
           imagePullPolicy: Never
           # Build the environment into the `/nixroot` directory
+          # To keep thing fast and small only build a small image
           command: ["nixster"]
-          args: ["build", "multi-mega", "--store", "/nixroot"]
+          args: ["build", "r", "--store", "/nixroot"]
           volumeMounts:
             - name: nix-volume
               mountPath: /nixroot
           # Build needs to be priviledged
           securityContext:
             privileged: true
-      # We're using an empty directory here just for testing
-      # In production this is likely to be a Persistent Volume Claim (PVC)
+      # Use the ReadWriteOnce PVC
       volumes:
         - name: nix-volume
-          emptyDir: {}
+          persistentVolumeClaim:
+            claimName: nixster-pvc-rwo
