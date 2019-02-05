@@ -100,10 +100,19 @@ Use `Ctrl+C` to stop both containers. The `--build` flag ensures that you are us
 
 You can test deployment of Nixster to a Kubernetes cluster using Minikube. Install [`minikube`](https://kubernetes.io/docs/tasks/tools/install-minikube/) and [`kubectl`](https://kubernetes.io/docs/tasks/tools/install-kubectl/).
 
+#### Getting started
+
 Start Minikube:
 
 ```bash
 minikube start
+```
+
+The Minikube dashboard can be useful, especially when you are just getting familiar with Kubernetes. So you might want to open that up:
+
+```bash
+# In a separate terminal...
+minikube dashboard
 ```
 
 Then set various `DOCKER_*` environment variables in the current terminal session so that the `docker` client uses the Docker daemon inside that cluster:
@@ -118,19 +127,47 @@ Using the Docker daemon inside the Minikube cluster avoids having to push/pull t
 docker build . --tag stencila/nixster
 ```
 
-Mount the local `./nixroot` directory into the Minikube cluster (see the section above on building environments first). Since this needs to keep running, you'll need to run this in a separate terminal:
+If you change the Nixster `src` code you have to repeat this step to get those changes into the Minikube cluster.
+
+#### Create a persistent volume
+
+Nixster uses a persistent volume, that is shared by nodes in the cluster, to store package binaries in `/nix/store`. In this step we create the Kubernetes `PersistentVolume` and `PersistentVolumeClaim`s needed in the following `build` and `serve` steps.
 
 ```bash
-minikube mount $PWD/nixroot:/nixroot
+kubectl apply -f minikube-volumes.yml
 ```
 
-Now deploy to the Minikube cluster:
+#### Build an environment
+
+There is a Kubernetes `Job` for building a small test environment into the `/nix/store` on the `PersistentVolume`. Run that job using:
+
+```bash
+kubectl create -f minikube-build.yml
+```
+
+And check it's progress using:
+
+```bash
+$ kubectl get jobs
+NAME                COMPLETIONS   DURATION   AGE
+nixster-build-job   0/1           7m31s      7m31s
+```
+
+When the job is completed, before you can run it again, you'll need to delete it:
+
+```bash
+kubectl delete -f minikube-build.yml
+```
+
+#### Serve the environment
+
+Now that there is a built Nix environment available in the Minikube cluster, we can serve it by deploying the Nixster server,
 
 ```bash
 kubectl apply -f minikube-serve.yml
 ```
 
-Check the `Deployment` is ready (the dashboard can be useful for this too: `minikube dashboard`),
+Check the `Deployment` is ready with:
 
 ```bash
 $ kubectl get deployments
@@ -144,23 +181,7 @@ You can then get the URL of the server (so that you can visit in your browser or
 minikube service nixster-service --url
 ```
 
-There is also a `Job` for building environments. Test it on Minikube using:
-
-```bash
-kubectl apply -f minikube-job.yml
-```
-
-And check it's progress using the dashboard or:
-
-```bash
-$ kubectl get jobs
-NAME                COMPLETIONS   DURATION   AGE
-nixster-build-job   0/1           7m31s      7m31s
-```
-
-```bash
-kubectl get jobs
-```
+#### Shutting down
 
 When you're done testing, stop Minikube with:
 
