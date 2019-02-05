@@ -94,7 +94,8 @@ expressWs.app.ws('/shell', async (ws: any, req: express.Request) => {
       }
     })
 
-    let env = new Environment('multi-mega')
+    // For now, use an arbitrary, small environment for testing purposes.
+    let env = new Environment('r')
 
     const sessionParameters = new SessionParameters()
     sessionParameters.platform = Platform.DOCKER
