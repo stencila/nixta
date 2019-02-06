@@ -52,7 +52,7 @@
     "@types/tar": "^4.0.0",
     "@types/tmp": "0.0.33",
     "@types/yargs": "^12.0.5",
-    "all-contributors-cli": "^5.7.0",
+    "all-contributors-cli": "^6.0.0",
     "jest": "^23.6.0",
     "markdown-toc": "^1.2.0",
     "pkg": "^4.3.7",
