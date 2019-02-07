@@ -6,13 +6,25 @@
 
 <!-- toc -->
 
-- [Environment building](#environment-building)
+- [Defining environments](#defining-environments)
+  * [Changing the packages in an existing community environment](#changing-the-packages-in-an-existing-community-environment)
+    + [Use `nixster`](#use-nixster)
+    + [Use a text editor](#use-a-text-editor)
+    + [Use Github editor](#use-github-editor)
+  * [Creating a new community environment](#creating-a-new-community-environment)
+- [Building environments](#building-environments)
 - [Server testing and deployment](#server-testing-and-deployment)
   * [Local development](#local-development)
   * [Local `dist` testing](#local-dist-testing)
   * [Local `build` testing](#local-build-testing)
   * [Local Docker container testing](#local-docker-container-testing)
   * [Local container orchestration testing](#local-container-orchestration-testing)
+  * [Local Kubernetes cluster testing](#local-kubernetes-cluster-testing)
+    + [Getting started](#getting-started)
+    + [Create a persistent volume](#create-a-persistent-volume)
+    + [Build an environment](#build-an-environment)
+    + [Serve the environment](#serve-the-environment)
+    + [Shutting down](#shutting-down)
 - [Updating the package distribution](#updating-the-package-distribution)
   * [How to add R packages](#how-to-add-r-packages)
   * [How to add Node.js packages](#how-to-add-nodejs-packages)
@@ -21,7 +33,77 @@
 
 <!-- tocstop -->
 
-## Environment building
+## Defining environments
+
+Nixster comes with several predefined environments that are intended to be useful for the research community. We welcome proposed changes to these environments as well as proposals for new environments.
+
+### Changing the packages in an existing community environment
+
+One of the easiest (and most useful!) ways for you to contribute to Nixster is to propose the addition (or removal) of packages to community environments. There are several ways that you make such changes: using the `nixster` CLI tool, using a text editor, or using Github. If you don't have Nixster or this repo installed locally then [using Github](#use-github) is probably the easiest approach.
+
+Please create a separate PR for each environment with a short description of why you are proposing the change.
+
+#### Use `nixster`
+
+You can use the `nixster` CLI to add or remove packages to the community environments in this repository. Using `nixster` has the advantage over manually editing YAML files that it will check added package names are valid. However, it does require you to have both Nixster and Nix installed.
+
+First, check the name of the package you want to add. For example, let's say we want to add the R package to do with titration that we can't remember the exact name of:
+
+```bash
+$ nixster search "titration*" --type r-package
+r   r-titrationcurves              0.1.0
+```
+
+OK! Now we have the name let's add it to the `r-mega` environment:
+
+```bash
+$ nixster add r-titrationcurves --to r-mega
+```
+
+This may take some time because it will actually build the `r-titrationcurves` package (or fetch the pre-built binaries) and add it to the Nix environment. When that is done though the [`envs/r-mega.yaml`](envs/r-mega.yaml) file will be changed with the new package added:
+
+```bash
+$ git diff envs/r-mega.yaml
+diff --git a/envs/r-mega.yaml b/envs/r-mega.yaml
+index 69b122d..ff38d2b 100644
+--- a/envs/r-mega.yaml
++++ b/envs/r-mega.yaml
+@@ -3,3 +3,5 @@ type: Environment
+ name: r-mega
+ extends:
+   - r-mini
++adds:
++  - r-titrationcurves
+```
+
+When you have finished making changes to each environment, commit those changes and create a pull request.
+
+#### Use a text editor
+
+Since environments are defined in YAML, you can add or remove packages by editing the `.yaml` file for the environment using your favourite text editor. For example, to change the `r-mega` environment, edit the [`envs/r-mega.yaml`](envs/r-mega.yaml) file. To add a new package, create a new item for it under the `adds` property. To remove a package, either remove it from the `adds` list, or if it is inherited from one of the base environments listed under `extends`, then add it to the `removes` list. e.g.
+
+```yaml
+'@context': 'https://stenci.la/schema/v01-draft/'
+type: Environment
+name: r-mega
+extends:
+  - r-mini
+adds:
+  # Add new packages in alphabetical order...
+  - r-tidyverse
+  - r-titanic
+  - r-titrationcurves
+```
+
+#### Use Github editor
+
+Edit the `.yaml` file for the environment directly on Github using the `https://github.com/stencila/nixster/edit/master/envs/<ENIRONMENT-NAME>.yaml` URL. For example, for the `r-mega` environment, edit the `envs/r-mega.yaml` file with this [link](https://github.com/stencila/nixster/edit/master/envs/r-mega.yaml). Github should ask you if you want to fork the repository and create a new pull request for your edit. Follow the instructions above for adding/removing packages using a text editor.
+
+### Creating a new community environment
+
+We also welcome any proposed new domain, or application, specific environments. For example, you might want to create an environment that is useful for you and your collegues in a narrow, specific domain without the bloat of the general `mega` environments. Please see the examples of existing environments in the `envs` directory, create a new `.yaml` file there, and submit a PR!
+
+## Building environments
 
 During development, you'll usually want to have some Nixster environments already built so you can test against them. The CLI's `build` command is used to build environments. You can do that locally e.g.
 
