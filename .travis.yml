@@ -19,6 +19,8 @@ script:
   - npx ts-node src/cli.ts update nixos-18.09
   - make cover
   - make docs
+  # Dump the packages to a TSV file for browsing (until we have a better way of browsing them)
+  - npx ts-node src/cli.ts dump packages --tsv > docs/packages.tsv
 
   # Generate Nix files
   # node2nix produce a lot of output on stderr which causes Travis to say

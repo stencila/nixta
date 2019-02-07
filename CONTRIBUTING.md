@@ -95,6 +95,8 @@ adds:
   - r-titrationcurves
 ```
 
+If you do not have Nixster installed it can be sometimes difficult to work out the right package name to use. Until we have a better solution, we currently dump a tab separated file of all packages to https://stencila.github.io/nixster/packages.tsv on each Travis build.
+
 #### Use Github editor
 
 Edit the `.yaml` file for the environment directly on Github using the `https://github.com/stencila/nixster/edit/master/envs/<ENIRONMENT-NAME>.yaml` URL. For example, for the `r-mega` environment, edit the `envs/r-mega.yaml` file with this [link](https://github.com/stencila/nixster/edit/master/envs/r-mega.yaml). Github should ask you if you want to fork the repository and create a new pull request for your edit. Follow the instructions above for adding/removing packages using a text editor.

@@ -400,6 +400,34 @@ yargs
     output({ list, term, type }, argv, searchPrettify)
   })
 
+  .command('dump [table]', 'Search in database', (yargs: any) => {
+    yargs
+      .positional('table', {
+        describe: 'The database table to dump',
+        type: 'string',
+        default: 'packages'
+      })
+    // Usual output options, plus TSV
+    outputOptions(yargs)
+    yargs
+      .option('tsv', {
+        describe: 'Output as TSV (tab separated values)',
+        type: 'boolean'
+      })
+      .conflicts('tsv', 'format')
+      .conflicts('tsv', 'pretty')
+      .conflicts('tsv', 'yaml')
+      .conflicts('tsv', 'json')
+  }, async (argv: any) => {
+    const rows = await nix.dump(argv.table)
+    if (argv.format === 'tsv' || argv.tsv) {
+      console.log('name\ttype\tversion\tdescription')
+      for (let row of rows) {
+        console.log(`${row.name}\t${row.type}\t${row.version}\t${row.description}`)
+      }
+    } else output(rows, argv)
+  })
+
   .command('serve', 'Serve', (yargs: any) => {
     yargs
       .option('port', {

@@ -241,6 +241,28 @@ export async function search (term: string, type: string = '', limit: number = 1
 }
 
 /**
+ * Dump one of the tables in the Nixster database
+ *
+ * @param table The table to dump
+ */
+export async function dump (table: string): Promise<Array<any>> {
+  let stmt
+  if (table === 'packages') {
+    stmt = db.prepare(`
+      SELECT name, type, max(version) AS version, max(channel) AS channel, max(description) AS description
+      FROM (
+        SELECT name, type, version, channel, description
+        FROM packages
+      )
+      GROUP BY name, type
+    `)
+  } else {
+    throw new Error(`Dumping table "${table}" is not supported`)
+  }
+  return stmt.all()
+}
+
+/**
  * Get the location of an environment within the Nix store
  *
  * @param env The environment name
