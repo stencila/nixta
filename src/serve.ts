@@ -18,17 +18,19 @@ const jsonParser = require('body-parser').json()
 app.use(jsonParser)
 
 const DEFAULT_ENVIRONMENT = 'multi-mega'
+const JWT_ENABLED = process.env.NODE_ENV !== 'development'
 
 /**
  * Secret for JSON web tokens.
  */
-let JWT_SECRET = process.env.JWT_SECRET
-if (!JWT_SECRET) {
-  if (process.env.NODE_ENV === 'development') JWT_SECRET = 'not-a-secret'
-  else throw Error('JWT_SECRET must be set')
-}
+if (JWT_ENABLED) {
+  const JWT_SECRET = process.env.JWT_SECRET
+  if (!JWT_SECRET) {
+    throw Error('JWT_SECRET must be set')
+  }
 
-app.use(jwt({ secret: JWT_SECRET }))
+  app.use(jwt({ secret: JWT_SECRET }))
+}
 
 /**
  * Validates that all the `requiredParameters` are properties of `body`.
@@ -100,6 +102,12 @@ function doRequestValidation (request: express.Request, response: express.Respon
  * @param expectedContainerId
  */
 function getJwtData (request: express.Request, response: express.Response, expectedContainerId: string | null = null): any {
+  if (!JWT_ENABLED) {
+    return {
+      'cid': expectedContainerId
+    }
+  }
+
   // @ts-ignore
   const jwtData: any = request.user
 
