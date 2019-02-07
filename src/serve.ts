@@ -105,7 +105,7 @@ function getJwtData (request: express.Request, response: express.Response, expec
 
   if (expectedContainerId) {
     if (expectedContainerId !== jwtData.cid) {
-      response.status(403).send('Contained ID in JWT does not match expected.')
+      response.status(403).send('Container ID in JWT does not match expected.')
       return null
     }
   } else if (jwtData.cid) {
