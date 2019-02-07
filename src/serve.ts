@@ -3,6 +3,8 @@ import stream from 'stream'
 
 import express from 'express'
 
+const jwt = require('express-jwt')
+
 import Environment, { Platform, SessionParameters } from './Environment'
 
 const app = express()
@@ -16,6 +18,17 @@ const jsonParser = require('body-parser').json()
 app.use(jsonParser)
 
 const DEFAULT_ENVIRONMENT = 'multi-mega'
+
+/**
+ * Secret for JSON web tokens.
+ */
+let JWT_SECRET = process.env.JWT_SECRET
+if (!JWT_SECRET) {
+  if (process.env.NODE_ENV === 'development') JWT_SECRET = 'not-a-secret'
+  else throw Error('JWT_SECRET must be set')
+}
+
+app.use(jwt({ secret: JWT_SECRET }))
 
 /**
  * Validates that all the `requiredParameters` are properties of `body`.
@@ -75,10 +88,44 @@ function doRequestValidation (request: express.Request, response: express.Respon
   return true
 }
 
-// todo: rename shell to interact
+/**
+ * Get the JWT data from a Request. Will either return the JWT data or null:
+ *
+ * The `exepectedContainerId` argument is the containerId that is expected to be found in the JWT. If one is provieded
+ * and it does not exist/does not match in the JWT token then a 403 status and message will be sent to the response.
+ * Similarly, if this is null and a containerId is sent a 403 status is sent and message written.
+ *
+ * @param request
+ * @param response
+ * @param expectedContainerId
+ */
+function getJwtData (request: express.Request, response: express.Response, expectedContainerId: string | null = null): any {
+  // @ts-ignore
+  const jwtData: any = request.user
+
+  if (expectedContainerId) {
+    if (expectedContainerId !== jwtData.cid) {
+      response.status(403).send('Container ID in JWT does not match expected.')
+      return null
+    }
+  } else if (jwtData.cid) {
+    response.status(403).send('Attempted to use JWT that already has a container id.')
+    return null
+  }
+
+  return jwtData
+}
+
 // Instantiate shell and set up data handlers
 expressWs.app.ws('/shell', async (ws: any, req: express.Request) => {
   const environment = req.query.environment || DEFAULT_ENVIRONMENT
+
+  const jwtData = getJwtData(req, ws, null)
+
+  if (jwtData === null) {
+    return ws.close()
+  }
+
   try {
     // Create streams that pipe between the Websocket and
     // the pseudo terminal
@@ -113,6 +160,12 @@ expressWs.app.ws('/shell', async (ws: any, req: express.Request) => {
 expressWs.app.ws('/interact', async (ws: any, req: express.Request) => {
   const environment = req.query.environment || DEFAULT_ENVIRONMENT
   const containerId = req.query.containerId || ''
+
+  const jwtData = getJwtData(req, ws, containerId)
+
+  if (jwtData === null) {
+    return ws.close()
+  }
 
   try {
     // Create streams that pipe between the Websocket and
@@ -155,6 +208,12 @@ app.use((error: Error, req: express.Request, res: express.Response, next: any) =
 })
 
 expressWs.app.post('/start', async (req: express.Request, res: express.Response) => {
+  const jwtData = getJwtData(req, res)
+
+  if (jwtData === null) {
+    return res.end()
+  }
+
   if (!doRequestValidation(req, res, ['environmentId'])) {
     return res.end()
   }
@@ -176,6 +235,12 @@ expressWs.app.post('/execute', async (req: express.Request, res: express.Respons
     return res.end()
   }
 
+  const jwtData = getJwtData(req, res, req.body.containerId)
+
+  if (jwtData === null) {
+    return res.end()
+  }
+
   const env = new Environment(req.body.environmentId)
 
   const sessionParameters = new SessionParameters()
@@ -191,6 +256,12 @@ expressWs.app.post('/execute', async (req: express.Request, res: express.Respons
 expressWs.app.post('/stop', async (req: express.Request, res: express.Response) => {
   // req: some JSON -> with container ID that will stop the container
   if (!doRequestValidation(req, res, ['environmentId', 'containerId'])) {
+    return res.end()
+  }
+
+  const jwtData = getJwtData(req, res, req.body.containerId)
+
+  if (jwtData === null) {
     return res.end()
   }
 
