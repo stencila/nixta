@@ -91,7 +91,7 @@ function doRequestValidation (request: express.Request, response: express.Respon
 /**
  * Get the JWT data from a Request. Will either return the JWT data or null:
  *
- * The `exepectedContainerId` argument is the containerId that is expected to be found in the JWT. If one is provieded
+ * The `expectedContainerId` argument is the containerId that is expected to be found in the JWT. If one is provided
  * and it does not exist/does not match in the JWT token then a 403 status and message will be sent to the response.
  * Similarly, if this is null and a containerId is sent a 403 status is sent and message written.
  *
@@ -199,14 +199,6 @@ expressWs.app.ws('/interact', async (ws: any, req: express.Request) => {
   }
 })
 
-// Error handling middleware
-app.use((error: Error, req: express.Request, res: express.Response, next: any) => {
-  console.error(error.stack)
-  res.status(500)
-  res.render('error', { error })
-  next(error)
-})
-
 expressWs.app.post('/start', async (req: express.Request, res: express.Response) => {
   const jwtData = getJwtData(req, res)
 
@@ -286,6 +278,14 @@ expressWs.app.post('/stop', async (req: express.Request, res: express.Response) 
     })
   }
 
+})
+
+// Error handling middleware
+app.use((error: Error, req: express.Request, res: express.Response, next: any) => {
+  console.error(error.stack)
+  res.status(500)
+  res.render('error', { error })
+  next(error)
 })
 
 /**
