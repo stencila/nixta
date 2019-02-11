@@ -19,6 +19,10 @@ export enum Platform {
   UNIX, WIN, DOCKER
 }
 
+export enum ContainerStatus {
+  RUNNING, STOPPED
+}
+
 const DOCKER_DEFAULT_COMMAND = 'sh'
 const DOCKER_CONTAINER_ID_SHORT_LENGTH = 12
 

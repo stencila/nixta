@@ -5,7 +5,7 @@ import express from 'express'
 
 const jwt = require('express-jwt')
 
-import Environment, { Platform, SessionParameters } from './Environment'
+import Environment, { ContainerStatus, Platform, SessionParameters } from './Environment'
 
 const app = express()
 const expressWs = require('express-ws')(app)
@@ -303,10 +303,32 @@ expressWs.app.post('/stop', async (req: express.Request, res: express.Response) 
       error: `Container ${containerId} was not stopped.`
     })
   }
-
 })
 
-// TODO: session (container) info querying (i.e. is container still running)
+expressWs.app.post('/container-status', async (req: express.Request, res: express.Response) => {
+  // req: some JSON -> with container ID that will stop the container
+  if (!doRequestValidation(req, res, ['environmentId', 'containerId'])) {
+    return res.end()
+  }
+
+  const jwtData = getJwtData(req, res, req.body.containerId)
+
+  if (jwtData === null) {
+    return res.end()
+  }
+
+  const env = new Environment(req.body.environmentId)
+  const sessionParameters = new SessionParameters()
+  sessionParameters.platform = Platform.DOCKER
+
+  const containerId = req.body.containerId
+
+  return res.json(
+      {
+        status: ContainerStatus[await env.containerIsRunning(containerId) ? ContainerStatus.RUNNING : ContainerStatus.STOPPED]
+      }
+  ).end()
+})
 
 // Error handling middleware
 app.use((error: Error, req: express.Request, res: express.Response, next: any) => {
