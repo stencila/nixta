@@ -29,7 +29,17 @@ if (JWT_ENABLED) {
     throw Error('JWT_SECRET must be set')
   }
 
-  app.use(jwt({ secret: JWT_SECRET }))
+  app.use(jwt({
+    secret: JWT_SECRET,
+    getToken: function fromHeaderOrQuerystring (req: express.Request) {
+      if (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Bearer') {
+        return req.headers.authorization.split(' ')[1]
+      } else if (req.query && req.query.token) {
+        return req.query.token
+      }
+      return null
+    }
+  }))
 }
 
 /**
@@ -164,7 +174,7 @@ expressWs.app.ws('/shell', async (ws: any, req: express.Request) => {
   }
 })
 
-// Instantiate shell and set up data handlers
+// Instantiate shell and set up data handlers but connect to an existing container
 expressWs.app.ws('/interact', async (ws: any, req: express.Request) => {
   const environment = req.query.environment || DEFAULT_ENVIRONMENT
   const containerId = req.query.containerId || ''
@@ -223,6 +233,14 @@ expressWs.app.post('/start', async (req: express.Request, res: express.Response)
   const sessionParameters = new SessionParameters()
   sessionParameters.platform = Platform.DOCKER
   sessionParameters.command = req.body.command || ''
+
+  if (req.body.cpuShares) {
+    sessionParameters.cpuShares = req.body.cpuShares
+  }
+
+  if (req.body.memoryLimit) {
+    sessionParameters.memoryLimit = req.body.memoryLimit
+  }
 
   const containerId = await env.start(sessionParameters)
   return res.json({
@@ -287,6 +305,8 @@ expressWs.app.post('/stop', async (req: express.Request, res: express.Response) 
   }
 
 })
+
+// TODO: session (container) info querying (i.e. is container still running)
 
 // Error handling middleware
 app.use((error: Error, req: express.Request, res: express.Response, next: any) => {
