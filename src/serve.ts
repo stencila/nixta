@@ -4,6 +4,7 @@ import stream from 'stream'
 import express from 'express'
 
 const jwt = require('express-jwt')
+const asyncHandler = require('express-async-handler')
 
 import Environment, { ContainerStatus, Platform, SessionParameters } from './Environment'
 
@@ -135,7 +136,7 @@ function getJwtData (request: express.Request, response: express.Response, expec
 }
 
 // Instantiate shell and set up data handlers
-expressWs.app.ws('/shell', async (ws: any, req: express.Request) => {
+expressWs.app.ws('/shell', asyncHandler(async (ws: any, req: express.Request) => {
   const environment = req.query.environment || DEFAULT_ENVIRONMENT
 
   const jwtData = getJwtData(req, ws, null)
@@ -172,10 +173,10 @@ expressWs.app.ws('/shell', async (ws: any, req: express.Request) => {
   } catch (error) {
     console.error(error)
   }
-})
+}))
 
 // Instantiate shell and set up data handlers but connect to an existing container
-expressWs.app.ws('/interact', async (ws: any, req: express.Request) => {
+expressWs.app.ws('/interact', asyncHandler(async (ws: any, req: express.Request) => {
   const environment = req.query.environment || DEFAULT_ENVIRONMENT
   const containerId = req.query.containerId || ''
 
@@ -215,9 +216,9 @@ expressWs.app.ws('/interact', async (ws: any, req: express.Request) => {
   } catch (error) {
     console.error(error)
   }
-})
+}))
 
-expressWs.app.post('/start', async (req: express.Request, res: express.Response) => {
+expressWs.app.post('/start', asyncHandler(async (req: express.Request, res: express.Response) => {
   const jwtData = getJwtData(req, res)
 
   if (jwtData === null) {
@@ -246,9 +247,9 @@ expressWs.app.post('/start', async (req: express.Request, res: express.Response)
   return res.json({
     containerId: containerId
   })
-})
+}))
 
-expressWs.app.post('/execute', async (req: express.Request, res: express.Response) => {
+expressWs.app.post('/execute', asyncHandler(async (req: express.Request, res: express.Response) => {
   if (!doRequestValidation(req, res, ['environmentId', 'containerId', 'command'])) {
     return res.end()
   }
@@ -269,9 +270,9 @@ expressWs.app.post('/execute', async (req: express.Request, res: express.Respons
   return res.json({
     output: await env.execute(sessionParameters, req.body.daemonize === true)
   })
-})
+}))
 
-expressWs.app.post('/stop', async (req: express.Request, res: express.Response) => {
+expressWs.app.post('/stop', asyncHandler(async (req: express.Request, res: express.Response) => {
   // req: some JSON -> with container ID that will stop the container
   if (!doRequestValidation(req, res, ['environmentId', 'containerId'])) {
     return res.end()
@@ -303,9 +304,9 @@ expressWs.app.post('/stop', async (req: express.Request, res: express.Response) 
       error: `Container ${containerId} was not stopped.`
     })
   }
-})
+}))
 
-expressWs.app.post('/container-status', async (req: express.Request, res: express.Response) => {
+expressWs.app.post('/container-status', asyncHandler(async (req: express.Request, res: express.Response) => {
   // req: some JSON -> with container ID that will stop the container
   if (!doRequestValidation(req, res, ['environmentId', 'containerId'])) {
     return res.end()
@@ -328,7 +329,7 @@ expressWs.app.post('/container-status', async (req: express.Request, res: expres
         status: ContainerStatus[await env.containerIsRunning(containerId) ? ContainerStatus.RUNNING : ContainerStatus.STOPPED]
       }
   ).end()
-})
+}))
 
 // Error handling middleware
 app.use((error: Error, req: express.Request, res: express.Response, next: any) => {
