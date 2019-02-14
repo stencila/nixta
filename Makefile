@@ -69,5 +69,5 @@ demo-upload:
 	asciinema upload demo.cast
 
 demo-magic.sh:
-	curl https://raw.githubusercontent.com/nokome/demo-magic/master/demo-magic.sh > demo-magic.sh
+	curl https://raw.githubusercontent.com/paxtonhare/demo-magic/master/demo-magic.sh > demo-magic.sh
 	chmod +x demo.sh
