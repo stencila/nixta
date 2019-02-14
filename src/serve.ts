@@ -349,7 +349,7 @@ app.use((error: Error, req: express.Request, res: express.Response, next: any) =
  * @param port Port to listen on
  * @param address Address to listen on
  */
-export default function serve (port: number = 3000, address: string = '') {
+export function serve (port: number = 3000, address: string = '') {
   app.listen(port, address)
   return { port, address }
 }

@@ -46,6 +46,7 @@ docker-serve:
 		--volume /var/run/docker.sock:/var/run/docker.sock \
 		--volume $$PWD/nixroot:/nixroot:ro \
 		--publish 3000:3000 \
+		--env JWT_SECRET=notasecret \
 		stencila/nixster nixster serve --address 0.0.0.0
 
 # Interact with the container in a Bash shell. Useful for debugging build errors
