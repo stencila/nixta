@@ -1,7 +1,7 @@
 language: node_js
 node_js:
-  - 8
-  - 10
+  - "8"
+  - "10"
 
 cache:
   directories:
@@ -51,3 +51,4 @@ deploy:
     local-dir: docs
     on:
       branch: master
+      node: "10"
