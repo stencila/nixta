@@ -18,7 +18,6 @@ import yaml from 'js-yaml'
 
 import * as nix from './nix'
 import Environment, { SessionParameters, Platform } from './Environment'
-import serve from './serve'
 
 const VERSION = require('../package').version
 
@@ -444,7 +443,12 @@ yargs
       })
     outputOptions(yargs)
   }, async (argv: any) => {
-    const { port, address } = serve(argv.port, argv.address)
+    // We dynamically require the serve module because that does
+    // a lot of setup stuff (e.g. checking for tokens, setting routes)
+    // at the top level which we don't want to run unless we're actually serving.
+    // That will be refactored in the future so it's all wrapped in functions.
+    const serve = require('./serve')
+    const { port, address } = serve.serve(argv.port, argv.address)
     output({ port, address }, argv, result => `⚡ Listening on http://${address}:${port}`)
   })
 
