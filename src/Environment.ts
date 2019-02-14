@@ -19,8 +19,39 @@ export enum Platform {
   UNIX, WIN, DOCKER
 }
 
+export enum ContainerStatus {
+  RUNNING, STOPPED
+}
+
 const DOCKER_DEFAULT_COMMAND = 'sh'
 const DOCKER_CONTAINER_ID_SHORT_LENGTH = 12
+
+interface ContainerMount {
+  /**
+   * The path inside the container
+   */
+  destination: string
+
+  /**
+   * The path on the host
+   */
+  source: string
+
+  /**
+   * Mount options (e.g. rw/ro)
+   */
+  options: Array<string>
+}
+
+/**
+ * Convert a ContainerMount to a --volume argument that can be passed to docker
+ * @param containerMount
+ */
+function containerMountToVolumeArg (containerMount: ContainerMount): Array<string> {
+  const options = containerMount.options.join(',')
+
+  return ['--volume', `${containerMount.source}:${containerMount.destination}:${options}`]
+}
 
 /**
  * Parameters of a user session inside an environment
@@ -69,6 +100,11 @@ export class SessionParameters {
    * will start a new container.
    */
   containerId: string = ''
+
+  /**
+   * Volumes to mount inside a container
+   */
+  mounts: Array<ContainerMount> = []
 }
 
 let ENVIRONS_HOME = path.join(home, 'envs')
@@ -455,7 +491,7 @@ export default class Environment {
   private getDockerRunCommand (sessionParameters: SessionParameters, daemonize: boolean = false): Array<string> {
     const { command, cpuShares, memoryLimit } = sessionParameters
     const nixLocation = nix.location(this.name)
-    const shellArgs = [
+    let shellArgs = [
       'run', '--interactive', '--tty', '--rm',
       // Prepend the environment path to the PATH variable
       '--env', `PATH=${nixLocation}/bin:${nixLocation}/sbin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin`,
@@ -466,19 +502,25 @@ export default class Environment {
       // Apply CPU shares
       `--cpu-shares=${cpuShares}`,
       // Apply memory limit
-      `--memory=${memoryLimit}`,
-      // We use Alpine Linux as a base image because it is very small but has some basic
-      // shell utilities (lkike ls and uname) that are good for debugging but also sometimes
-      // required for things like R
-      'alpine'
-    ].concat(
-        // Command to execute in the container
-        command ? command.split(' ') : DOCKER_DEFAULT_COMMAND
-    )
+      `--memory=${memoryLimit}`
+    ]
+
+    sessionParameters.mounts.map((mount: ContainerMount) => {
+      const volumeArgs = containerMountToVolumeArg(mount)
+      shellArgs = shellArgs.concat(volumeArgs)
+    })
 
     if (daemonize) shellArgs.splice(1, 0, '-d')
 
-    return shellArgs
+    // We use Alpine Linux as a base image because it is very small but has some basic
+    // shell utilities (lkike ls and uname) that are good for debugging but also sometimes
+    // required for things like R
+    shellArgs.push('alpine')
+
+    return shellArgs.concat(
+        // Command to execute in the container
+        command ? command.split(' ') : DOCKER_DEFAULT_COMMAND
+    )
   }
 
   /**
