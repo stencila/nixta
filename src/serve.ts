@@ -235,6 +235,10 @@ expressWs.app.post('/start', asyncHandler(async (req: express.Request, res: expr
   sessionParameters.platform = Platform.DOCKER
   sessionParameters.command = req.body.command || ''
 
+  if (req.body.mounts) {
+    sessionParameters.mounts = req.body.mounts
+  }
+
   if (req.body.cpuShares) {
     sessionParameters.cpuShares = req.body.cpuShares
   }
@@ -325,9 +329,9 @@ expressWs.app.post('/container-status', asyncHandler(async (req: express.Request
   const containerId = req.body.containerId
 
   return res.json(
-      {
-        status: ContainerStatus[await env.containerIsRunning(containerId) ? ContainerStatus.RUNNING : ContainerStatus.STOPPED]
-      }
+    {
+      status: ContainerStatus[await env.containerIsRunning(containerId) ? ContainerStatus.RUNNING : ContainerStatus.STOPPED]
+    }
   ).end()
 }))
 
