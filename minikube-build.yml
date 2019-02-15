@@ -11,14 +11,10 @@ spec:
   template:
     spec:
       restartPolicy: Never
-      # Prevent Kubernetes setting `NIXSTER_SERVICE_*` environment variables
-      # which makes the `nixster` CLI tool complain about unrecognised options
-      # because of the `NIXTER_` prefix clash.
-      enableServiceLinks: false
       initContainers:
         # Create the `profiles` directory
         # This is a workaround which could be avoided by a fix in the `nixster` app
-        - name: init-nix-volumne
+        - name: init-nix-volume
           image: busybox
           command: ["sh", "-c", "mkdir -p /nixroot/nix/profiles/"]
           volumeMounts:

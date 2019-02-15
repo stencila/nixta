@@ -183,7 +183,6 @@ yargs
         alias: 'd',
         default: false
       })
-      .env('NIXSTER')
       .option('store', {
         describe: 'The Nix store to be built into.',
         type: 'string',
