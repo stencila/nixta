@@ -335,12 +335,16 @@ expressWs.app.post('/container-status', asyncHandler(async (req: express.Request
   ).end()
 }))
 
-// Error handling middleware
+// Error handling middleware which returns the error as JSON (the default returns HTML)
 app.use((error: Error, req: express.Request, res: express.Response, next: any) => {
-  console.error(error.stack)
+  // Send error to stderr
+  console.error(error)
+  // ... and as JSON to the client
   res.status(500)
-  res.render('error', { error })
-  next(error)
+  res.json({
+    error: error.message,
+    trace: error.stack
+  })
 })
 
 /**
