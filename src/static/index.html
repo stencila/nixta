@@ -30,7 +30,7 @@
       // Connect to server
       const protocol = (location.protocol === 'https:') ? 'wss://' : 'ws://';
       const port = location.port ? `:${location.port}` : '';
-      const socket = new WebSocket(`${protocol}${location.hostname}${port}/interact${window.location.search}`);
+      const socket = new WebSocket(`${protocol}${location.hostname}${port}/shell${window.location.search}`);
       socket.onopen = (ev) => { term.attach(socket); };
     </script>
   </body>
