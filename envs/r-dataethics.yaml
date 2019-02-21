@@ -1,0 +1,19 @@
+'@context': 'https://stenci.la/schema/v1/'
+type: Environment
+name: r-dataethics
+description: >
+  An environment for the Data Ethics course run at the University of Canterbury in March-June 2019. The course is run
+  using Stencila Hub and requires R to be available with a few specific packages.
+comments: >
+  This environment includes `coreutils` because when running R in a pure 
+  environment without that package you get errors about `uname` and `rm` missing
+  (and possibly others?). It includes packages specifically required for the Data Ethics course, such as,
+  `neuralnet`, `tree` and `randomForest`. The package `MASS` is added for the same reasons as `coreutils`.
+extends:
+  - r
+adds:
+  - r-tidyverse
+  - r-neuralnet
+  - r-tree 
+  - r-randomForest
+  - r-MASS
