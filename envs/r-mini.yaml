@@ -4,4 +4,8 @@ name: r-mini
 extends:
   - r
 adds:
+  - r-mass
+  - r-neuralnet
+  - r-randomforest
   - r-tidyverse
+  - r-tree
