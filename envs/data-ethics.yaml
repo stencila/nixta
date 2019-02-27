@@ -1,0 +1,10 @@
+'@context': 'https://stenci.la/schema/v1/'
+type: Environment
+name: data-ethics
+description: >
+  An environment for the exploring data ethics in R. Originally developed for the "Data471 The Trustworthy Data Scientist" course run 
+  at the University of Canterbury, New Zealand in March-June 2019.
+extends:
+  - r-mini
+  - python-mini
+
