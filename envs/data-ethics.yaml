@@ -7,4 +7,7 @@ description: >
 extends:
   - r-mini
   - python-mini
+adds:
+  - r-glue
+  - r-janitor
 
