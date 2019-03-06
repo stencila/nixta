@@ -1,10 +1,9 @@
 /**
  * Nixster's interface to Nix.
  */
-import fs from 'fs'
+import fs from 'fs-extra'
 import path from 'path'
 
-import mkdirp from 'mkdirp'
 import { sprintf } from 'sprintf-js'
 
 import db from './db'
@@ -318,7 +317,7 @@ export async function install (env: string, pkgs: Array<string>, clean: boolean 
       profile = path.join(profiles, env)
     }
     // Ensure the profiles directory is present
-    mkdirp.sync(path.dirname(profile))
+    fs.ensureDirSync(path.dirname(profile))
     args = args.concat(
       '--profile', profile,
       '--attr', channels[channel].map((pkg: any) => pkg.attr)
