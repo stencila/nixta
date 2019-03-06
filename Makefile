@@ -1,10 +1,13 @@
-all: setup lint test build docs
+all: setup lint test check build docs
 
 setup:
 	npm install
 
 lint:
 	npm run lint
+
+check:
+	npm run check
 
 test:
 	npm test

@@ -1,12 +1,10 @@
-import fs from 'fs'
+import fs from 'fs-extra'
 import os from 'os'
 import path from 'path'
 import stream from 'stream'
 
 import chalk from 'chalk'
-import del from 'del'
 import glob from 'glob'
-import mkdirp from 'mkdirp'
 import * as pty from 'node-pty'
 import tmp from 'tmp'
 import yaml from 'js-yaml'
@@ -195,7 +193,7 @@ export default class Environment {
     if (this.adds && this.adds.length === 0) this.adds = undefined
     if (this.removes && this.removes.length === 0) this.removes = undefined
 
-    mkdirp.sync(Environment.home())
+    fs.ensureDirSync(Environment.home())
     const yml = yaml.safeDump(this, { skipInvalid: true })
     fs.writeFileSync(this.path(), yml)
     return this
@@ -231,7 +229,7 @@ export default class Environment {
     // Delete the environment's files/folders
     const path = new Environment(name, false).path()
     if (!fs.existsSync(path)) throw new Error(`Environment "${name}" does not exist.`)
-    del.sync(path, { force: true })
+    fs.removeSync(path)
   }
 
   /**
