@@ -1,4 +1,5 @@
-# 📦 Nixster: a package manager and distribution based on Nix
+## 📦 Nixster
+### A package manager and distribution based on Nix
 
 [![Build status](https://travis-ci.org/stencila/nixster.svg?branch=master)](https://travis-ci.org/stencila/nixster)
 [![Code coverage](https://codecov.io/gh/stencila/nixster/branch/master/graph/badge.svg)](https://codecov.io/gh/stencila/nixster)
@@ -6,6 +7,8 @@
 [![NPM](http://img.shields.io/npm/v/@stencila/nixster.svg?style=flat)](https://www.npmjs.com/package/@stencila/nixster)
 [![Docs](https://img.shields.io/badge/docs-latest-blue.svg)](https://stencila.github.io/nixster/)
 [![Chat](https://badges.gitter.im/stencila/stencila.svg)](https://gitter.im/stencila/stencila)
+
+[Nix](https://nixos.org/nix/) is a superbly well designed and powerful cross-platform package manager. But it's also got a very steep learning curve. Even for experienced programmers it can be daunting to use. Nixster is a thin, sugary wrapper around Nix to make it sweeter to use 🍭!
 
 > :warning:
 > In early development! Contributions welcome!
