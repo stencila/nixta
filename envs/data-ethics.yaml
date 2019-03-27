@@ -10,4 +10,7 @@ extends:
 adds:
   - r-glue
   - r-janitor
+  - r-anonymizer
+  - r-visdat
+  - r-sdcMicro
 
