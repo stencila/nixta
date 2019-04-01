@@ -51,7 +51,7 @@
     "@types/sprintf-js": "^1.1.2",
     "@types/stream-to-promise": "^2.2.0",
     "@types/tar": "^4.0.0",
-    "@types/tmp": "0.0.34",
+    "@types/tmp": "0.1.0",
     "@types/yargs": "^12.0.9",
     "all-contributors-cli": "^6.1.2",
     "depcheck": "^0.7.2",
