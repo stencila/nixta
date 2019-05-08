@@ -61,7 +61,7 @@
     "pkg": "^4.3.7",
     "ts-jest": "^24.0.0",
     "ts-node": "^8.0.3",
-    "ts-node-dev": "^1.0.0-pre.32",
+    "ts-node-dev": "^1.0.0-pre.37",
     "tslint": "^5.13.1",
     "tslint-config-standard": "^8.0.1",
     "typedoc": "^0.14.0",
