@@ -54,7 +54,7 @@
     "@types/tmp": "0.1.0",
     "@types/yargs": "^13.0.0",
     "all-contributors-cli": "^6.1.2",
-    "depcheck": "^0.7.2",
+    "depcheck": "^0.8.0",
     "dependency-check": "^3.3.0",
     "jest": "^24.1.0",
     "markdown-toc": "^1.2.0",
