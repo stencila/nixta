@@ -2,6 +2,9 @@ language: node_js
 node_js:
   - "10"
 
+services:
+  - docker
+
 cache:
   directories:
     - /nix
@@ -17,6 +20,7 @@ script:
   # Do an update to populate db prior to testing
   - npx ts-node src/cli.ts update nixos-18.09
   - make cover
+  - make docker
   - make docs
   # Dump the packages to a TSV file for browsing (until we have a better way of browsing them)
   - npx ts-node src/cli.ts dump packages --tsv > docs/packages.tsv
