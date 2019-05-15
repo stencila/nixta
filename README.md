@@ -43,6 +43,19 @@ You will also need to have [Nix installed](https://nixos.org/nix/download.html):
 curl https://nixos.org/nix/install | sh
 ```
 
+To test the CLI more conveniently you can add an alias to your shell e.g.
+
+```bash
+alias nixster='npx ts-node src/cli.ts'
+```
+
+Or, if you want to use the CLI outside of this directory:
+
+```bash
+alias nixster='/path/to/nixster/node_modules/.bin/ts-node --project /path/to/nixster/tsconfig.json /path/to/nixster/src/cli.ts'
+```
+
+
 ### Docker image
 
 Instead of installing Nix and Nixster you can use the `stencila/nixster` Docker image:
