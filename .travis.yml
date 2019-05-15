@@ -25,7 +25,7 @@ script:
   - npm run docs
   - npm run build
   - npm run bundle:$TRAVIS_OS_NAME
-  - npm run docker
+  - make docker
 
   # Dump the packages to a TSV file for browsing (until we have a better way of browsing them)
   - npx ts-node src/cli.ts dump packages --tsv > docs/packages.tsv
