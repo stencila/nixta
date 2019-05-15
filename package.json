@@ -1,6 +1,6 @@
 {
   "name": "@stencila/nixster",
-  "version": "19.01.0",
+  "version": "19.05.0",
   "description": "A package manager and distribution based on Nix",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -101,7 +101,15 @@
   },
   "release": {
     "plugins": [
-      "@semantic-release/commit-analyzer",
+      ["@semantic-release/commit-analyzer", {
+        "preset": "angular",
+        "releaseRules": [
+          {"breaking": true, "release": "patch"},
+          {"type": "feat", "release": "patch"},
+          {"type": "fix", "release": "patch"},
+          {"type": "perf", "release": "patch"}
+        ]
+      }],
       "@semantic-release/release-notes-generator",
       [
         "@semantic-release/git",
