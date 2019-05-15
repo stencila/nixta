@@ -27,7 +27,7 @@ export const home = packaged ? path.dirname(process.execPath) : path.dirname(__d
 if (packaged && !fs.existsSync(path.join(home, 'node_modules'))) {
   tar.x({
     sync: true,
-    file: path.join('/', 'snapshot', 'nixster', 'nixster.tgz'),
+    file: path.join('/', 'snapshot', 'nixster', 'nixster-deps.tgz'),
     C: home
   })
 }

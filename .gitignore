@@ -1,11 +1,11 @@
 /*.idea
 /*.sqlite3
-/build
+/bin
 /coverage
 /demo-magic.sh
 /demo.cast
 /dist
 /docs
 /nixroot
-/nixster.tgz
+/nixster-deps.tgz
 /node_modules

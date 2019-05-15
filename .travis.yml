@@ -16,12 +16,17 @@ before_install:
 
 # Do linting, coverage, and build docs (to upload to Github pages)
 script:
-  - make lint
   # Do an update to populate db prior to testing
   - npx ts-node src/cli.ts update nixos-18.09
-  - make cover
-  - make docker
-  - make docs
+
+  - npm run lint
+  - npm run check
+  - npm run cover
+  - npm run docs
+  - npm run build
+  - npm run bundle:$TRAVIS_OS_NAME
+  - npm run docker
+
   # Dump the packages to a TSV file for browsing (until we have a better way of browsing them)
   - npx ts-node src/cli.ts dump packages --tsv > docs/packages.tsv
 
@@ -54,3 +59,21 @@ deploy:
     local-dir: docs
     on:
       branch: master
+  
+  # Do a semantic release (only on Linux)
+  - provider: script
+    skip_cleanup: true
+    script: npx semantic-release
+    on:
+      branch: master
+      condition: $TRAVIS_OS_NAME = linux
+
+  # Deploy build artifacts to Github release
+  # page on *any* tag (including those generated for a semantic release)
+  - provider: releases
+    api_key: $GITHUB_TOKEN
+    file_glob: true
+    file: bin/*.tar.gz
+    skip_cleanup: true
+    on:
+      tags: true
