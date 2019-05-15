@@ -1,5 +1,5 @@
 ## 📦 Nixster
-### A package manager and distribution based on Nix
+### A package manager based on Nix
 
 [![Build status](https://travis-ci.org/stencila/nixster.svg?branch=master)](https://travis-ci.org/stencila/nixster)
 [![Code coverage](https://codecov.io/gh/stencila/nixster/branch/master/graph/badge.svg)](https://codecov.io/gh/stencila/nixster)
@@ -8,25 +8,33 @@
 [![Docs](https://img.shields.io/badge/docs-latest-blue.svg)](https://stencila.github.io/nixster/)
 [![Chat](https://badges.gitter.im/stencila/stencila.svg)](https://gitter.im/stencila/stencila)
 
-[Nix](https://nixos.org/nix/) is a superbly well designed and powerful cross-platform package manager. But it's also got a very steep learning curve. Even for experienced programmers it can be daunting to use. Nixster is a thin, sugary wrapper around Nix to make it sweeter to use 🍭!
+[Nix](https://nixos.org/nix/) is a superbly well designed and powerful cross-platform package manager. But it's also got a very steep learning curve. Even for experienced programmers it can be daunting to use. 
 
-> :warning:
-> In early development! Contributions welcome!
-> :heart:
+Nixster is a thin, sugary wrapper around Nix to make it sweeter to use 🍭! It takes a JSON (or YAML) definition of a reproducible computing [`Environment`](https://stencila.github.io/schema/Environment) and builds a Nix environment for it.
 
 <!-- Automatically generated TOC. Don't edit, `make docs` instead>
 
 <!-- toc -->
 
+- [Status](#status)
+- [Demo](#demo)
 - [Install](#install)
   * [Command line tool](#command-line-tool)
     + [Linux](#linux)
     + [MacOS and Windows](#macos-and-windows)
   * [Node package](#node-package)
   * [Docker image](#docker-image)
-- [Demo](#demo)
 
 <!-- tocstop -->
+
+## Status
+
+:warning: Experimental and in early development. At this stage we are experimenting with what features Nixster will have and how it will add value to reproducible workflows. Feedback and contributions welcome! :heart:.
+
+## Demo
+
+<a href="https://asciinema.org/a/KD0z367VL5mBNknueUpqzVGMP?size=medium&cols=120&autoplay=1" target="_blank"><img src="https://asciinema.org/a/KD0z367VL5mBNknueUpqzVGMP.svg" /></a>
+
 
 ## Install
 
@@ -51,7 +59,7 @@ curl -L https://raw.githubusercontent.com/stencila/nixster/master/install.sh | b
 To install a specific version, append `-s vX.X.X` e.g.
 
 ```bash
-curl -L https://raw.githubusercontent.com/stencila/nixster/master/install.sh | bash -s v1.00.0
+curl -L https://raw.githubusercontent.com/stencila/nixster/master/install.sh | bash -s v1.0.1
 ```
 
 Or, if you'd prefer to do things manually, or place Nixster elewhere, download `nixster-linux-x64.tar.gz` for the [latest release](https://github.com/stencila/nixster/releases/) and then,
@@ -94,7 +102,3 @@ Instead of installing Nix and Nixster you can use the `stencila/nixster` Docker 
 ```bash
 make docker docker-interact
 ```
-
-## Demo
-
-<a href="https://asciinema.org/a/KD0z367VL5mBNknueUpqzVGMP?size=medium&cols=120&autoplay=1" target="_blank"><img src="https://asciinema.org/a/KD0z367VL5mBNknueUpqzVGMP.svg" /></a>
