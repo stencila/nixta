@@ -64,7 +64,7 @@ RUN wget https://download.docker.com/linux/static/stable/x86_64/docker-${DOCKER_
  && tar xzvf docker-${DOCKER_VERSION}.tgz --strip 1 -C /usr/local/bin docker/docker \
  && rm docker-${DOCKER_VERSION}.tgz
 
-COPY --from=builder /nixster/build/nixster /home/nixster
+COPY --from=builder /nixster/bin/nixster /home/nixster
 
 WORKDIR /home/nixster
 

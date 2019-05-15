@@ -1,6 +1,6 @@
 {
   "name": "@stencila/nixster",
-  "version": "19.01.0",
+  "version": "19.05.0",
   "description": "A package manager and distribution based on Nix",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -14,16 +14,23 @@
     "check:deps-used": "dependency-check --entry dist/serve.js .",
     "check:deps-unused": "dependency-check --extra --no-dev --entry dist/serve.js .",
     "cover": "jest --collectCoverage",
-    "build": "npm run build:dist && npm run build:bins",
+    "build": "npm run build:dist && npm run build:tgz && npm run build:bins",
     "build:dist": "tsc && cp -TRv src/static/ dist/static/",
-    "build:tgz": "tar czf nixster.tgz envs node_modules/better-sqlite3 node_modules/integer node_modules/node-pty",
-    "build:bins": "npm run build:tgz && pkg --target=node10 --out-path=build .",
-    "contributors:add": "all-contributors add",
+    "build:tgz": "tar czf nixster-deps.tgz envs node_modules/better-sqlite3 node_modules/integer node_modules/node-pty",
+    "build:bins": "pkg --target=host -o=bin/nixster .",
+    "bundle:linux": "tar -czvf bin/nixster-linux-x64.tar.gz bin/nixster",
+    "bundle:osx": "tar -czvf bin/nixster-macos-x64.tar.gz bin/nixster",
+    "docs": "npm run docs:readme && npm run docs:contrib && typedoc --readme README.md --mode file --out ./docs ./src",
     "docs:readme": "markdown-toc -i --maxdepth=4 README.md",
     "docs:contrib": "markdown-toc -i --maxdepth=4 CONTRIBUTING.md",
-    "docs": "npm run docs:readme && npm run docs:contrib && typedoc --readme README.md --mode file --out ./docs ./src",
     "serve:dev": "ts-node-dev src/cli.ts serve",
     "serve:dist": "node dist/cli.js serve"
+  },
+  "pkg": {
+    "assets": [
+      "./dist/static/**/*",
+      "./nixster-deps.tgz"
+    ]
   },
   "repository": {
     "type": "git",
@@ -43,6 +50,11 @@
   },
   "homepage": "https://github.com/stencila/nixster#readme",
   "devDependencies": {
+    "@semantic-release/commit-analyzer": "^6.1.0",
+    "@semantic-release/git": "^7.0.8",
+    "@semantic-release/github": "^5.2.10",
+    "@semantic-release/npm": "^5.1.8",
+    "@semantic-release/release-notes-generator": "^7.1.4",
     "@types/better-sqlite3": "^5.4.0",
     "@types/express": "^4.16.0",
     "@types/express-ws": "^3.0.0",
@@ -59,6 +71,7 @@
     "jest": "^24.8.0",
     "markdown-toc": "^1.2.0",
     "pkg": "^4.4.0",
+    "semantic-release": "^15.13.12",
     "ts-jest": "^24.0.2",
     "ts-node": "^8.1.0",
     "ts-node-dev": "^1.0.0-pre.39",
@@ -86,10 +99,25 @@
     "tmp": "0.1.0",
     "yargs": "^13.2.4"
   },
-  "pkg": {
-    "assets": [
-      "./dist/static/**/*",
-      "./nixster.tgz"
+  "release": {
+    "plugins": [
+      ["@semantic-release/commit-analyzer", {
+        "preset": "angular",
+        "releaseRules": [
+          {"breaking": true, "release": "patch"},
+          {"type": "feat", "release": "patch"},
+          {"type": "fix", "release": "patch"},
+          {"type": "perf", "release": "patch"}
+        ]
+      }],
+      "@semantic-release/release-notes-generator",
+      [
+        "@semantic-release/git",
+        {
+          "message": "chore(release): ${nextRelease.version}\n\n${nextRelease.notes}"
+        }
+      ],
+      "@semantic-release/github"
     ]
   }
 }
