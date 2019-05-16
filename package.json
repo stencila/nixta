@@ -1,6 +1,6 @@
 {
   "name": "@stencila/nixster",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "A package manager based on Nix",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -108,7 +108,8 @@
         {
           "npmPublish": false
         }
-      ],[
+      ],
+      [
         "@semantic-release/git",
         {
           "message": "chore(release): ${nextRelease.version}\n\n${nextRelease.notes}"
