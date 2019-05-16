@@ -82,7 +82,7 @@ export async function update (channels: string | Array<string> = [], last: boole
 
   let channel = channels
 
-  // Get list of avalaible packages in the nixster channel and put them in the database
+  // Get list of available packages in the channel and put them in the database
   console.log(`Querying channel ${channel} for available packages`)
   let pkgs: any = {}
   const args = ['--query', `--file`, `channel:${channel}`, '--available', '--meta', '--json']
@@ -90,7 +90,8 @@ export async function update (channels: string | Array<string> = [], last: boole
   // so we have a loop for that case and potential others
   for (let extraArgs of [
     [],
-    ['--attr', 'rPackages']
+    ['--attr', 'rPackages'],
+    ['--attr', 'haskellPackages']
   ]) {
     let allArgs = args.concat(extraArgs)
     let json = await spawn('nix-env', allArgs)
@@ -136,12 +137,21 @@ export async function update (channels: string | Array<string> = [], last: boole
       }
 
       // Rename language packages to provide consistency and
-      // prevent versioned names.
+      // across languages
+
+      const haskellPackage = attr.match(/^haskellPackages\./)
+      if (haskellPackage) {
+        type = 'haskell-package'
+        // Prefix package names with `haskell`
+        name = 'haskell-' + name
+      }
 
       const pythonPackage = attr.match(/^python(\d+)Packages\./)
       if (pythonPackage) {
         type = 'python-package'
         runtime = 'python' + pythonPackage[1]
+        // Prefix package names with `python`
+        // removing the Python version if necessary
         if (name.startsWith('python')) {
           name = name.replace(/^python[\d\.]+/, 'python')
         } else {
@@ -153,6 +163,8 @@ export async function update (channels: string | Array<string> = [], last: boole
       if (perlPackage) {
         type = 'perl-package'
         runtime = 'perl' + (perlPackage[1] ? perlPackage[1] : '')
+        // Prefix package names with `perl`
+        // removing the Perl version if necessary
         if (name.startsWith('perl')) {
           name = name.replace(/^perl[\d\.]+/, 'perl')
         }
@@ -161,9 +173,10 @@ export async function update (channels: string | Array<string> = [], last: boole
       const rPackage = attr.match(/^rPackages\./)
       if (rPackage) {
         type = 'r-package'
+        // R packages are already prefixed with `r-`
       }
 
-      // Normalise name
+      // Normalize name
       name = name.toLowerCase().replace(/[._-]+/gi, '-')
 
       // Insert row into table
