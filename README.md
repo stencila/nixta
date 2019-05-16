@@ -59,14 +59,17 @@ curl -L https://raw.githubusercontent.com/stencila/nixster/master/install.sh | b
 To install a specific version, append `-s vX.X.X` e.g.
 
 ```bash
-curl -L https://raw.githubusercontent.com/stencila/nixster/master/install.sh | bash -s v1.0.1
+curl -L https://raw.githubusercontent.com/stencila/nixster/master/install.sh | bash -s v0.1.1
 ```
 
-Or, if you'd prefer to do things manually, or place Nixster elewhere, download `nixster-linux-x64.tar.gz` for the [latest release](https://github.com/stencila/nixster/releases/) and then,
+Or, if you'd prefer to do things manually, or place Nixster elewhere, download `nixster-linux-x64.tar.gz` for the [latest release](https://github.com/stencila/nixster/releases/), and then
 
 ```bash
-tar xvf nixster-linux-x64.tar.gz
-mv -f nixster ~/.local/bin/ # or wherever you like
+tar xvf nixster-linux-x64.tar.gz # unzip the download
+sudo mkdir -p /user/local/bin/nixster-v0.1.1 # create a directory for it
+sudo mv -f nixster /user/local/bin/nixster-v0.1.1 # move it there
+sudo ln -sf nixster-v0.1.1/nixster /user/local/bin/nixster # create a link to the executable
+sudo nixster --version # run once to setup necessary files and folders
 ```
 
 #### MacOS and Windows
