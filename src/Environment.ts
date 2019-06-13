@@ -461,7 +461,7 @@ export default class Environment {
   }
 
   /**
-   * Get an array suitable for passing to `spawn` to execute a docker command with environment variables for nixster
+   * Get an array suitable for passing to `spawn` to execute a docker command with environment variables for nixta
    *
    * @param sessionParameters SessionParameters that define the container to exec inside and the command to run
    * @param daemonize Should the Docker command be run with the '-d' flag?
@@ -481,7 +481,7 @@ export default class Environment {
   }
 
   /**
-   * Get an array suitable for passing to `spawn` to execute a docker command with default args for nixster
+   * Get an array suitable for passing to `spawn` to execute a docker command with default args for nixta
    *
    * @param sessionParameters SessionParameters to use for limiting Docker's resource usage
    * @param daemonize Should the Docker command be run with the '-d' flag?
@@ -565,20 +565,20 @@ export default class Environment {
     shellPath = shellPath.toString().trim()
 
     if (platform === Platform.UNIX) {
-      // Inject Nixster into the environment as an alias so we can use it
+      // Inject Nixta into the environment as an alias so we can use it
       // there without polluting the environment with additional binaries.
       // During development you'll need to use ---pure=false so that
-      // node is available to run Nixster. In production, when a user
+      // node is available to run Nixta. In production, when a user
       // has installed a binary, this shouldn't be necessary
-      let nixsterPath
+      let nixtaPath
       try {
-        nixsterPath = await spawn('which', ['nixster'])
+        nixtaPath = await spawn('which', ['nixta'])
       } catch (error) {
-        // Nixster not on path
+        // Nixta not on path
       }
-      if (nixsterPath) {
+      if (nixtaPath) {
         const tempRcFile = tmp.fileSync()
-        fs.writeFileSync(tempRcFile.name, `alias nixster="${nixsterPath.toString().trim()}"\n`)
+        fs.writeFileSync(tempRcFile.name, `alias nixta="${nixtaPath.toString().trim()}"\n`)
         shellArgs.push('--rcfile', tempRcFile.name)
       }
     }
@@ -586,10 +586,10 @@ export default class Environment {
     // Environment variables
     let vars = await this.vars(pure)
     vars = Object.assign(vars, {
-      // Let Nixster know which environment we're in.
-      NIXSTER_ENV: this.name,
+      // Let Nixta know which environment we're in.
+      NIXTA_ENV: this.name,
       // Customise the bash prompt so that the user know that they are in
-      // a Nixster environment and which one.
+      // a Nixta environment and which one.
       PS1: '☆ ' + chalk.green.bold(this.name) + ':' + chalk.blue('\\w') + '$ '
     })
 
@@ -609,7 +609,7 @@ export default class Environment {
   }
 
   /**
-   * Spawn a new shell with the default setup for nixster, attaching stdout and stdin
+   * Spawn a new shell with the default setup for nixta, attaching stdout and stdin
    *
    * @param shellPath The command to run
    * @param shellArgs Arguments to pass to the command in `shellpath`

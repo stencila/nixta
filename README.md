@@ -1,16 +1,16 @@
-## 📦 Nixster
+## 📦 Nixta
 ### A package manager based on Nix
 
-[![Build status](https://travis-ci.org/stencila/nixster.svg?branch=master)](https://travis-ci.org/stencila/nixster)
-[![Code coverage](https://codecov.io/gh/stencila/nixster/branch/master/graph/badge.svg)](https://codecov.io/gh/stencila/nixster)
-[![Greenkeeper badge](https://badges.greenkeeper.io/stencila/nixster.svg)](https://greenkeeper.io/)
-[![NPM](http://img.shields.io/npm/v/@stencila/nixster.svg?style=flat)](https://www.npmjs.com/package/@stencila/nixster)
-[![Docs](https://img.shields.io/badge/docs-latest-blue.svg)](https://stencila.github.io/nixster/)
+[![Build status](https://travis-ci.org/stencila/nixta.svg?branch=master)](https://travis-ci.org/stencila/nixta)
+[![Code coverage](https://codecov.io/gh/stencila/nixta/branch/master/graph/badge.svg)](https://codecov.io/gh/stencila/nixta)
+[![Greenkeeper badge](https://badges.greenkeeper.io/stencila/nixta.svg)](https://greenkeeper.io/)
+[![NPM](http://img.shields.io/npm/v/@stencila/nixta.svg?style=flat)](https://www.npmjs.com/package/@stencila/nixta)
+[![Docs](https://img.shields.io/badge/docs-latest-blue.svg)](https://stencila.github.io/nixta/)
 [![Chat](https://badges.gitter.im/stencila/stencila.svg)](https://gitter.im/stencila/stencila)
 
 [Nix](https://nixos.org/nix/) is a superbly well designed and powerful cross-platform package manager. But it's also got a very steep learning curve. Even for experienced programmers it can be daunting to use. 
 
-Nixster is a thin, sugary wrapper around Nix to make it sweeter to use 🍭! It takes a JSON (or YAML) definition of a reproducible computing [`Environment`](https://stencila.github.io/schema/Environment) and builds a Nix environment for it.
+Nixta is a thin, sugary wrapper around Nix to make it sweeter to use 🍭! It takes a JSON (or YAML) definition of a reproducible computing [`Environment`](https://stencila.github.io/schema/Environment) and builds a Nix environment for it.
 
 <!-- Automatically generated TOC. Don't edit, `make docs` instead>
 
@@ -29,7 +29,7 @@ Nixster is a thin, sugary wrapper around Nix to make it sweeter to use 🍭! It 
 
 ## Status
 
-:warning: Experimental and in early development. At this stage we are experimenting with what features Nixster will have and how it will add value to reproducible workflows. Feedback and contributions welcome! :heart:.
+:warning: Experimental and in early development. At this stage we are experimenting with what features Nixta will have and how it will add value to reproducible workflows. Feedback and contributions welcome! :heart:.
 
 ## Demo
 
@@ -38,7 +38,7 @@ Nixster is a thin, sugary wrapper around Nix to make it sweeter to use 🍭! It 
 
 ## Install
 
-Nixster is available as a pre-built, standalone [command line tool](#command-line-tool), a [Node package](#node-package), or in [Docker image](#docker-image).
+Nixta is available as a pre-built, standalone [command line tool](#command-line-tool), a [Node package](#node-package), or in [Docker image](#docker-image).
 
 For the command line tool and the Node package you will also need to have [Nix installed](https://nixos.org/nix/download.html):
 
@@ -50,26 +50,26 @@ curl https://nixos.org/nix/install | sh
 
 #### Linux
 
-To install the latest release of the `nixster` command line tool to `~/.local/bin/` just use,
+To install the latest release of the `nixta` command line tool to `~/.local/bin/` just use,
 
 ```bash
-curl -L https://raw.githubusercontent.com/stencila/nixster/master/install.sh | bash
+curl -L https://raw.githubusercontent.com/stencila/nixta/master/install.sh | bash
 ```
 
 To install a specific version, append `-s vX.X.X` e.g.
 
 ```bash
-curl -L https://raw.githubusercontent.com/stencila/nixster/master/install.sh | bash -s v0.1.1
+curl -L https://raw.githubusercontent.com/stencila/nixta/master/install.sh | bash -s v0.1.1
 ```
 
-Or, if you'd prefer to do things manually, or place Nixster elewhere, download `nixster-linux-x64.tar.gz` for the [latest release](https://github.com/stencila/nixster/releases/), and then
+Or, if you'd prefer to do things manually, or place Nixta elewhere, download `nixta-linux-x64.tar.gz` for the [latest release](https://github.com/stencila/nixta/releases/), and then
 
 ```bash
-tar xvf nixster-linux-x64.tar.gz # unzip the download
-sudo mkdir -p /user/local/bin/nixster-v0.1.1 # create a directory for it
-sudo mv -f nixster /user/local/bin/nixster-v0.1.1 # move it there
-sudo ln -sf nixster-v0.1.1/nixster /user/local/bin/nixster # create a link to the executable
-sudo nixster --version # run once to setup necessary files and folders
+tar xvf nixta-linux-x64.tar.gz # unzip the download
+sudo mkdir -p /user/local/bin/nixta-v0.1.1 # create a directory for it
+sudo mv -f nixta /user/local/bin/nixta-v0.1.1 # move it there
+sudo ln -sf nixta-v0.1.1/nixta /user/local/bin/nixta # create a link to the executable
+sudo nixta --version # run once to setup necessary files and folders
 ```
 
 #### MacOS and Windows
@@ -81,26 +81,26 @@ Binaries are not yet available.
 Currently you will need to install the package via this repo (not yet published to NPM):
 
 ```bash
-git clone git@github.com:stencila/nixster.git
-cd nixster
+git clone git@github.com:stencila/nixta.git
+cd nixta
 npm install
 ```
 
 To test the CLI more conveniently you can add an alias to your shell e.g.
 
 ```bash
-alias nixster='npx ts-node src/cli.ts'
+alias nixta='npx ts-node src/cli.ts'
 ```
 
 Or, if you want to use the CLI outside of this directory:
 
 ```bash
-alias nixster='/path/to/nixster/node_modules/.bin/ts-node --project /path/to/nixster/tsconfig.json /path/to/nixster/src/cli.ts'
+alias nixta='/path/to/nixta/node_modules/.bin/ts-node --project /path/to/nixta/tsconfig.json /path/to/nixta/src/cli.ts'
 ```
 
 ### Docker image
 
-Instead of installing Nix and Nixster you can use the `stencila/nixster` Docker image:
+Instead of installing Nix and Nixta you can use the `stencila/nixta` Docker image:
 
 ```bash
 make docker docker-interact

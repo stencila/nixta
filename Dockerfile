@@ -1,15 +1,15 @@
-# Multi-stage Dockerfile for `stencila/nixtser`
+# Multi-stage Dockerfile for `stencila/nixta`
 
-# Build the Nixster binary
-# Note that the `nixster` binary produced will include native modules
+# Build the Nixta binary
+# Note that the `nixta` binary produced will include native modules
 # e.g. `better-sqlite3.node` for the platform it is built on (so it needs
 # to be a Linux builder to run on Linux-based Docker image)
 # You can test this stage alone by building and running like this:
-#   docker build . --target builder --tag stencila/nixster:builder
-#   docker run --rm -it -p 3000:3000 stencila/nixster:builder ./build/nixster serve
+#   docker build . --target builder --tag stencila/nixta:builder
+#   docker run --rm -it -p 3000:3000 stencila/nixta:builder ./build/nixta serve
 
 FROM node:10 AS builder
-WORKDIR /nixster
+WORKDIR /nixta
 # Copy package.json and install packages, instead of doing it whenever the src changes
 COPY package.json .
 RUN npm install
@@ -21,7 +21,7 @@ COPY src src/
 COPY tsconfig.json .
 RUN npm run build
 
-# Main image with Nix installed and Nixter copied into it
+# Main image with Nix installed and Nixta copied into it
 #
 # This is based on https://github.com/NixOS/docker/blob/master/Dockerfile
 # but modified to run on Ubuntu.
@@ -41,15 +41,15 @@ RUN apt-get update \
 # Create a non-root user
 RUN groupadd --gid 30000 nixbld \
   && for i in $(seq 1 30); do useradd --uid $((30000 + i)) --groups nixbld nixbld$i ; done
-RUN useradd --uid 1001 --create-home --groups nixbld nixster
-RUN install --mode 755 --owner nixster --directory /nix
+RUN useradd --uid 1001 --create-home --groups nixbld nixta
+RUN install --mode 755 --owner nixta --directory /nix
 
 ENV USER root
 
 RUN mkdir -m 0755 /etc/nix \
  && echo 'sandbox = false' > /etc/nix/nix.conf
 
-#USER nixster
+#USER nixta
 
 RUN USER=root sh nix-*-x86_64-linux/install \
  && rm -rf nix-${NIX_VERSION}-x86_64-linux
@@ -64,21 +64,21 @@ RUN wget https://download.docker.com/linux/static/stable/x86_64/docker-${DOCKER_
  && tar xzvf docker-${DOCKER_VERSION}.tgz --strip 1 -C /usr/local/bin docker/docker \
  && rm docker-${DOCKER_VERSION}.tgz
 
-COPY --from=builder /nixster/bin/nixster /home/nixster
+COPY --from=builder /nixta/bin/nixta /home/nixta
 
-WORKDIR /home/nixster
+WORKDIR /home/nixta
 
 # Prepend application directory and Nix profile to PATH
-ENV PATH=/home/nixster:/root/.nix-profile/bin:/root/.nix-profile/sbin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ENV PATH=/home/nixta:/root/.nix-profile/bin:/root/.nix-profile/sbin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
-# Check that Nixster is installed properly and do bootstapping of native Node modules 
-RUN nixster --help
+# Check that Nixta is installed properly and do bootstapping of native Node modules
+RUN nixta --help
 
 # Check that Nix is installed properly
 RUN nix-env --version
 
 RUN nix-channel --add https://nixos.org/channels/nixos-18.09 \
  && nix-channel --update \
- && nixster update nixos-18.09
+ && nixta update nixos-18.09
 
-CMD nixster serve
+CMD nixta serve

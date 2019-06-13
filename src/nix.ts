@@ -1,5 +1,5 @@
 /**
- * Nixster's interface to Nix.
+ * Nixta's interface to Nix.
  */
 import fs from 'fs-extra'
 import path from 'path'
@@ -62,7 +62,7 @@ const SKIP = [
 ]
 
 /**
- * Update the Nixster database
+ * Update the Nixta database
  */
 export async function update (channels: string | Array<string> = [], last: boolean = true) {
   if (Array.isArray(channels)) {
@@ -223,7 +223,7 @@ export async function match (pkg: string): Promise<Array<any>> {
 }
 
 /**
- * Search for a package in the Nixster database
+ * Search for a package in the Nixta database
  *
  * @param term Search term
  * @param type Type of package e.g. `r-package`
@@ -253,7 +253,7 @@ export async function search (term: string, type: string = '', limit: number = 1
 }
 
 /**
- * Dump one of the tables in the Nixster database
+ * Dump one of the tables in the Nixta database
  *
  * @param table The table to dump
  */

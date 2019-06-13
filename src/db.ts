@@ -1,11 +1,11 @@
 import Database from 'better-sqlite3'
 
 /**
- * The Nixster database used to cache data on
+ * The Nixta database used to cache data on
  * packages and environments.
  */
 
-const db: any = new Database('nixster.sqlite3')
+const db: any = new Database('nixta.sqlite3')
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS packages (

@@ -22,7 +22,7 @@ import Environment, { SessionParameters, Platform } from './Environment'
 const VERSION = require('../package').version
 
 yargs
-  .scriptName('nixster')
+  .scriptName('nixta')
 
   // Ensure at least one command
   .demandCommand(1, 'Please provide a command.')
@@ -139,7 +139,7 @@ yargs
         alias: 'env',
         type: 'string'
       })
-      .env('NIXSTER')
+      .env('NIXTA')
       .option('long', {
         describe: 'Show long form description',
         alias: 'l',
@@ -159,7 +159,7 @@ yargs
         alias: 'env',
         type: 'string'
       })
-      .env('NIXSTER')
+      .env('NIXTA')
     outputOptions(yargs)
   }, (argv: any) => {
     const pkgs = new Environment(argv.name).pkgs()
@@ -268,7 +268,7 @@ yargs
         alias: ['e', 'to'],
         type: 'string'
       })
-      .env('NIXSTER')
+      .env('NIXTA')
   }, async (argv: any) => {
     try {
       const env = new Environment(argv.env)
@@ -306,7 +306,7 @@ yargs
         alias: ['e', 'from'],
         type: 'string'
       })
-      .env('NIXSTER')
+      .env('NIXTA')
   }, async (argv: any) => {
     try {
       const env = new Environment(argv.env)
@@ -329,7 +329,7 @@ yargs
         alias: 'e',
         type: 'string'
       })
-      .env('NIXSTER')
+      .env('NIXTA')
   }, async (argv: any) => {
     try {
       const env = new Environment(argv.env)
