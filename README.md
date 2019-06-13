@@ -4,7 +4,6 @@
 [![Build status](https://travis-ci.org/stencila/nixta.svg?branch=master)](https://travis-ci.org/stencila/nixta)
 [![Code coverage](https://codecov.io/gh/stencila/nixta/branch/master/graph/badge.svg)](https://codecov.io/gh/stencila/nixta)
 [![Greenkeeper badge](https://badges.greenkeeper.io/stencila/nixta.svg)](https://greenkeeper.io/)
-[![NPM](http://img.shields.io/npm/v/@stencila/nixta.svg?style=flat)](https://www.npmjs.com/package/@stencila/nixta)
 [![Docs](https://img.shields.io/badge/docs-latest-blue.svg)](https://stencila.github.io/nixta/)
 [![Chat](https://badges.gitter.im/stencila/stencila.svg)](https://gitter.im/stencila/stencila)
 
@@ -34,6 +33,8 @@ Nixta is a thin, sugary wrapper around Nix to make it sweeter to use 🍭! It ta
 ## Demo
 
 <a href="https://asciinema.org/a/KD0z367VL5mBNknueUpqzVGMP?size=medium&cols=120&autoplay=1" target="_blank"><img src="https://asciinema.org/a/KD0z367VL5mBNknueUpqzVGMP.svg" /></a>
+
+> Note: This demo uses the previous name for this tool, "Nixster".
 
 
 ## Install
