@@ -4,13 +4,13 @@
 version: "3.2"
 services:
 
-  # Nixster server
-  nixster:
-    image: stencila/nixster
+  # Nixta server
+  nixta:
+    image: stencila/nixta
     build: .
     # Server needs to listen on 0.0.0.0 to accept connections
     # from outside of the container
-    command: nixster serve --address 0.0.0.0
+    command: nixta serve --address 0.0.0.0
     ports:
       - "3000:3000"
     environment:

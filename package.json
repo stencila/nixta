@@ -1,11 +1,11 @@
 {
-  "name": "@stencila/nixster",
+  "name": "@stencila/nixta",
   "version": "0.1.2",
   "description": "A package manager based on Nix",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "nixster": "./dist/cli.js"
+    "nixta": "./dist/cli.js"
   },
   "scripts": {
     "lint": "tslint --project tsconfig.json --fix --format stylish ./src/**/*.ts",
@@ -15,11 +15,11 @@
     "check:deps-unused": "dependency-check --extra --no-dev --entry dist/serve.js .",
     "cover": "jest --collectCoverage",
     "build": "npm run build:dist && npm run build:tgz && npm run build:bins",
-    "build:dist": "tsc && cp -TRv src/static/ dist/static/",
-    "build:tgz": "tar czf nixster-deps.tgz envs node_modules/better-sqlite3 node_modules/integer node_modules/node-pty",
-    "build:bins": "pkg --target=host -o=bin/nixster .",
-    "bundle:linux": "tar -czvf bin/nixster-linux-x64.tar.gz -C bin nixster",
-    "bundle:osx": "tar -czvf bin/nixster-macos-x64.tar.gz -C bin nixster",
+    "build:dist": "tsc && cp -Rv src/static/. dist/static/",
+    "build:tgz": "tar czf nixta-deps.tgz envs node_modules/better-sqlite3 node_modules/integer node_modules/node-pty",
+    "build:bins": "pkg --target=host -o=bin/nixta .",
+    "bundle:linux": "tar -czvf bin/nixta-linux-x64.tar.gz -C bin nixta",
+    "bundle:osx": "tar -czvf bin/nixta-macos-x64.tar.gz -C bin nixta",
     "docs": "npm run docs:readme && npm run docs:contrib && typedoc --readme README.md --mode file --out ./docs ./src",
     "docs:readme": "markdown-toc -i --maxdepth=4 README.md",
     "docs:contrib": "markdown-toc -i --maxdepth=4 CONTRIBUTING.md",
@@ -29,12 +29,12 @@
   "pkg": {
     "assets": [
       "./dist/static/**/*",
-      "./nixster-deps.tgz"
+      "./nixta-deps.tgz"
     ]
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/stencila/nixster.git"
+    "url": "git+https://github.com/stencila/nixta.git"
   },
   "keywords": [
     "Nix",
@@ -43,12 +43,12 @@
     "package",
     "manager"
   ],
-  "author": "Nixster contributors (https://github.com/stencila/nixster/contributors)",
+  "author": "Nixta contributors (https://github.com/stencila/nixta/contributors)",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/stencila/nixster/issues"
+    "url": "https://github.com/stencila/nixta/issues"
   },
-  "homepage": "https://github.com/stencila/nixster#readme",
+  "homepage": "https://github.com/stencila/nixta#readme",
   "devDependencies": {
     "@semantic-release/commit-analyzer": "^6.1.0",
     "@semantic-release/git": "^7.0.8",

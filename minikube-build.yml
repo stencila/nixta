@@ -1,11 +1,11 @@
-# An example Kubernetes deployment for building Nixster environments
+# An example Kubernetes deployment for building Nixta environments
 # Designed for testing using Minikube but should
 # require little modification for use in a production cluster.
 
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: nixster-build-job
+  name: nixta-build-job
 spec:
   backoffLimit: 4
   template:
@@ -13,7 +13,7 @@ spec:
       restartPolicy: Never
       initContainers:
         # Create the `profiles` directory
-        # This is a workaround which could be avoided by a fix in the `nixster` app
+        # This is a workaround which could be avoided by a fix in the `nixta` app
         - name: init-nix-volume
           image: busybox
           command: ["sh", "-c", "mkdir -p /nixroot/nix/profiles/"]
@@ -23,12 +23,12 @@ spec:
       containers:
         # Build container with write access to the `/nixroot` directory
         - name: build-container
-          image: stencila/nixster
+          image: stencila/nixta
           # Don't pull image, instead use the one built locally
           imagePullPolicy: Never
           # Build the environment into the `/nixroot` directory
           # To keep thing fast and small only build a small image
-          command: ["nixster"]
+          command: ["nixta"]
           args: ["build", "r", "--store", "/nixroot"]
           volumeMounts:
             - name: nix-volume
@@ -40,4 +40,4 @@ spec:
       volumes:
         - name: nix-volume
           persistentVolumeClaim:
-            claimName: nixster-pvc-rwo
+            claimName: nixta-pvc-rwo

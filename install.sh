@@ -8,7 +8,7 @@ if [[ "$OS" == "Linux" || "$OS" == "Darwin" ]]; then
         'Linux')
             PLATFORM="linux-x64"
             if [ -z "$1" ]; then
-                VERSION=$(curl --silent "https://api.github.com/repos/stencila/nixster/releases/latest" | grep -Po '"tag_name": "\K.*?(?=")')
+                VERSION=$(curl --silent "https://api.github.com/repos/stencila/nixta/releases/latest" | grep -Po '"tag_name": "\K.*?(?=")')
             else
                 VERSION=$1
             fi
@@ -17,7 +17,7 @@ if [[ "$OS" == "Linux" || "$OS" == "Darwin" ]]; then
         'Darwin')
             PLATFORM="macos-x64"
             if [ -z "$1" ]; then
-                VERSION=$(curl --silent "https://api.github.com/repos/stencila/nixster/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+                VERSION=$(curl --silent "https://api.github.com/repos/stencila/nixta/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
             else
                 VERSION=$1
             fi
@@ -25,19 +25,19 @@ if [[ "$OS" == "Linux" || "$OS" == "Darwin" ]]; then
             ;;
     esac
 
-    echo "Downloading Nixster $VERSION"
-    curl -Lo /tmp/nixster.tar.gz https://github.com/stencila/nixster/releases/download/$VERSION/nixster-$PLATFORM.tar.gz
-    tar xvf /tmp/nixster.tar.gz
-    rm -f /tmp/nixster.tar.gz
+    echo "Downloading Nixta $VERSION"
+    curl -Lo /tmp/nixta.tar.gz https://github.com/stencila/nixta/releases/download/$VERSION/nixta-$PLATFORM.tar.gz
+    tar xvf /tmp/nixta.tar.gz
+    rm -f /tmp/nixta.tar.gz
     
-    echo "Installing nixster to $INSTALL_PATH/nixster-$VERSION/nixster"
-    mkdir -p $INSTALL_PATH/nixster-$VERSION
-    mv -f nixster $INSTALL_PATH/nixster-$VERSION
-    # Unpack `node_modules` etc into the $INSTALL_PATH/nixster-$VERSION
-    $INSTALL_PATH/nixster-$VERSION/nixster --version
+    echo "Installing nixta to $INSTALL_PATH/nixta-$VERSION/nixta"
+    mkdir -p $INSTALL_PATH/nixta-$VERSION
+    mv -f nixta $INSTALL_PATH/nixta-$VERSION
+    # Unpack `node_modules` etc into the $INSTALL_PATH/nixta-$VERSION
+    $INSTALL_PATH/nixta-$VERSION/nixta --version
     
-    echo "Pointing nixster to $INSTALL_PATH/nixster-$VERSION/nixster"
-    ln -sf nixster-$VERSION/nixster $INSTALL_PATH/nixster
+    echo "Pointing nixta to $INSTALL_PATH/nixta-$VERSION/nixta"
+    ln -sf nixta-$VERSION/nixta $INSTALL_PATH/nixta
 else
-    echo "Sorry, I don't know how to install on this OS, please see https://github.com/stencila/nixster#install"
+    echo "Sorry, I don't know how to install on this OS, please see https://github.com/stencila/nixta#install"
 fi

@@ -24,40 +24,40 @@ serve:
 
 # Build the Docker image
 docker:
-	docker build . --tag stencila/nixster
+	docker build . --tag stencila/nixta
 
 # Push the Docker image to hub.docker.com
 docker-push:
-	docker push stencila/nixster
+	docker push stencila/nixta
 
-# Build the Nixster environments within the local `nixroot` directory
+# Build the Nixta environments within the local `nixroot` directory
 # Currently this builds the `multi-mega` environment but in the future it
 # may build all environments.
 # The --privileged flag is necessary to avoid `error: cloning builder process: Operation not permitted`
 # (see https://github.com/NixOS/nix/issues/2636 and other issues)
-# This mounts the local `./nixroot` directory and tells Nixster (and thus Nix :) to build into it.
+# This mounts the local `./nixroot` directory and tells Nixta (and thus Nix :) to build into it.
 # We need to build into `/nixroot/nix/store` because in the container, `/nix/store` has `nix-env` which is used for the build.
 docker-build:
 	docker run --rm --interactive --tty \
 		--privileged \
 		--volume $$PWD/nixroot:/nixroot \
-		stencila/nixster nixster build multi-mega --store /nixroot
+		stencila/nixta nixta build multi-mega --store /nixroot
 
-# Run the Nixster server
+# Run the Nixta server
 docker-serve:
 	docker run --rm --interactive --tty \
 		--volume /var/run/docker.sock:/var/run/docker.sock \
 		--volume $$PWD/nixroot:/nixroot:ro \
 		--publish 3000:3000 \
 		--env JWT_SECRET=notasecret \
-		stencila/nixster nixster serve --address 0.0.0.0
+		stencila/nixta nixta serve --address 0.0.0.0
 
 # Interact with the container in a Bash shell. Useful for debugging build errors
 docker-interact:
 	docker run --rm --interactive --tty \
 		--privileged \
 		--volume $$PWD/nixroot:/nixroot \
-		stencila/nixster bash
+		stencila/nixta bash
 
 docs:
 	npm run docs

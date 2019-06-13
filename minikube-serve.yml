@@ -1,4 +1,4 @@
-# An example Kubernetes deployment for serving Nixster
+# An example Kubernetes deployment for serving Nixta
 # Designed for testing using Minikube but should
 # require little modification for use in a production cluster.
 
@@ -6,23 +6,23 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: nixster-serve-deployment
+  name: nixta-serve-deployment
 spec:
   template:
     metadata:
       labels:
-        app: nixster-app
+        app: nixta-app
     spec:
       containers:
 
-        # Nixster server
+        # Nixta server
         - name: server-container
-          image: stencila/nixster
+          image: stencila/nixta
           # Don't pull image, instead use the one built locally
           imagePullPolicy: Never
           # Server needs to listen on 0.0.0.0 to accept connections
           # from outside of the container
-          command: ["nixster"]
+          command: ["nixta"]
           args: ["serve", "--address", "0.0.0.0"]
           # Tell the Docker client how to connect to the Docker daemon
           # in the sibling container
@@ -57,11 +57,11 @@ spec:
 
       # Use the ReadWriteMany PVC (even though we are only mounting
       # as read only this seeems to be necessary it does not work 
-      # with `nixster-pvc-rom`)
+      # with `nixta-pvc-rom`)
       volumes:
         - name: nix-volume
           persistentVolumeClaim:
-            claimName: nixster-pvc-rwm
+            claimName: nixta-pvc-rwm
 
 ---
 
@@ -71,11 +71,11 @@ spec:
 kind: Service
 apiVersion: v1
 metadata:
-  name: nixster-service
+  name: nixta-service
 spec:
   type: NodePort
   selector:
-    app: nixster-app
+    app: nixta-app
   ports:
     - protocol: TCP
       port: 80
