@@ -3,7 +3,6 @@
 
 [![Build status](https://travis-ci.org/stencila/nixta.svg?branch=master)](https://travis-ci.org/stencila/nixta)
 [![Code coverage](https://codecov.io/gh/stencila/nixta/branch/master/graph/badge.svg)](https://codecov.io/gh/stencila/nixta)
-[![Greenkeeper badge](https://badges.greenkeeper.io/stencila/nixta.svg)](https://greenkeeper.io/)
 [![Docs](https://img.shields.io/badge/docs-latest-blue.svg)](https://stencila.github.io/nixta/)
 [![Chat](https://badges.gitter.im/stencila/stencila.svg)](https://gitter.im/stencila/stencila)
 
