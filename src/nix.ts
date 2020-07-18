@@ -178,7 +178,7 @@ export async function update(
         // Prefix package names with `python`
         // removing the Python version if necessary
         if (name.startsWith('python')) {
-          name = name.replace(/^python[\d\.]+/, 'python')
+          name = name.replace(/^python[d.]+/, 'python')
         } else {
           name = 'python-' + name
         }
@@ -191,7 +191,7 @@ export async function update(
         // Prefix package names with `perl`
         // removing the Perl version if necessary
         if (name.startsWith('perl')) {
-          name = name.replace(/^perl[\d\.]+/, 'perl')
+          name = name.replace(/^perl[d.]+/, 'perl')
         }
       }
 

@@ -19,6 +19,7 @@ import yaml from 'js-yaml'
 import * as nix from './nix'
 import Environment, { SessionParameters, Platform } from './Environment'
 
+// eslint-disable-next-line
 const VERSION = require('../package').version
 
 yargs

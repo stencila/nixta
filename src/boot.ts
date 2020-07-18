@@ -19,7 +19,7 @@ import fs from 'fs-extra'
 import tar from 'tar'
 
 export const packaged =
-  process.hasOwnProperty('pkg') && fs.existsSync(path.join('/', 'snapshot'))
+  'pkg' in process && fs.existsSync(path.join('/', 'snapshot'))
 
 export const home = packaged
   ? path.dirname(process.execPath)
@@ -29,6 +29,6 @@ if (packaged && !fs.existsSync(path.join(home, 'node_modules'))) {
   tar.x({
     sync: true,
     file: path.join('/', 'snapshot', 'nixta', 'nixta-deps.tgz'),
-    C: home
+    C: home,
   })
 }
