@@ -4,7 +4,7 @@ import path from 'path'
 import stream from 'stream'
 
 import chalk from 'chalk'
-import glob from 'glob'
+import glob from 'globby'
 import * as pty from 'node-pty'
 import tmp from 'tmp'
 import yaml from 'js-yaml'
@@ -14,11 +14,14 @@ import spawn from './spawn'
 import * as nix from './nix'
 
 export enum Platform {
-  UNIX, WIN, DOCKER
+  UNIX,
+  WIN,
+  DOCKER,
 }
 
 export enum ContainerStatus {
-  RUNNING, STOPPED
+  RUNNING,
+  STOPPED,
 }
 
 const DOCKER_DEFAULT_COMMAND = 'sh'
@@ -45,10 +48,15 @@ interface ContainerMount {
  * Convert a ContainerMount to a --volume argument that can be passed to docker
  * @param containerMount
  */
-function containerMountToVolumeArg (containerMount: ContainerMount): Array<string> {
+function containerMountToVolumeArg(
+  containerMount: ContainerMount
+): Array<string> {
   const options = containerMount.options.join(',')
 
-  return ['--volume', `${containerMount.source}:${containerMount.destination}:${options}`]
+  return [
+    '--volume',
+    `${containerMount.source}:${containerMount.destination}:${options}`,
+  ]
 }
 
 /**
@@ -63,12 +71,12 @@ export class SessionParameters {
   /**
    * An initial command to execute in the shell e.g. R or python
    */
-  command: string = ''
+  command = ''
 
   /**
    * Should the shell be 'pure'? Only
    */
-  pure: boolean = true
+  pure = true
 
   /**
    * Standard input stream
@@ -84,20 +92,20 @@ export class SessionParameters {
    * CPU shares (only applies when using Docker platform). Priority of the container relative to other processes.
    * The default is 1024, a higher number means higher priority for execution (when CPU contention exists).
    */
-  cpuShares: Number = 1024
+  cpuShares = 1024
 
   /**
    * Memory limit (only applies when using Docker platform). Maximum amount of memory a container can use.
    * Should be set in the format <number>[<unit>]). Number is a positive integer. Unit can be one of b, k, m, or g.
    * Minimum is 4M.
    */
-  memoryLimit: string = '0'
+  memoryLimit = '0'
 
   /**
    * The ID of the container to attempt to use for an execution. It may be an empty string in which case the executor
    * will start a new container.
    */
-  containerId: string = ''
+  containerId = ''
 
   /**
    * Volumes to mount inside a container
@@ -111,7 +119,6 @@ let ENVIRONS_HOME = path.join(home, 'envs')
  * A computational environment
  */
 export default class Environment {
-
   /**
    * The JSON-LD context that the environment specification
    * should be interpreted within. Allows for versioning of env specs.
@@ -153,7 +160,7 @@ export default class Environment {
    */
   variables?: { [key: string]: string }
 
-  constructor (name: string, read: boolean = true) {
+  constructor(name: string, read = true) {
     if (!name) throw new Error('Environment name not provided.')
     this.name = name
     if (read) this.read()
@@ -164,7 +171,7 @@ export default class Environment {
    *
    * @param value Value for home directory
    */
-  static home (value?: string): string {
+  static home(value?: string): string {
     if (value) ENVIRONS_HOME = value
     return ENVIRONS_HOME
   }
@@ -172,14 +179,14 @@ export default class Environment {
   /**
    * Path to the environment specification files
    */
-  path (): string {
+  path(): string {
     return path.join(Environment.home(), this.name + '.yaml')
   }
 
   /**
    * Read this environment from file
    */
-  read (): Environment {
+  read(): Environment {
     const yml = fs.readFileSync(this.path(), 'utf8')
     const obj = yaml.safeLoad(yml)
     Object.assign(this, obj)
@@ -189,7 +196,7 @@ export default class Environment {
   /**
    * Write this environment to file
    */
-  write (): Environment {
+  write(): Environment {
     if (this.adds && this.adds.length === 0) this.adds = undefined
     if (this.removes && this.removes.length === 0) this.removes = undefined
 
@@ -206,11 +213,18 @@ export default class Environment {
    * @param options Optional attributes for the environment e.g. `packages`, `meta`
    * @param force If the environment already exists should it be overitten?
    */
-  static async create (name: string, options: { [key: string]: any } = {}, force: boolean = false): Promise<Environment> {
+  static async create(
+    name: string,
+    options: { [key: string]: any } = {},
+    force = false
+  ): Promise<Environment> {
     const env = new Environment(name, false)
 
     if (!force) {
-      if (fs.existsSync(env.path())) throw new Error(`Environment "${name}" already exists, use the 'force' option to overwrite it.`)
+      if (fs.existsSync(env.path()))
+        throw new Error(
+          `Environment "${name}" already exists, use the 'force' option to overwrite it.`
+        )
     }
 
     env.extends = options.extends
@@ -225,27 +239,32 @@ export default class Environment {
    *
    * @param name Name of the environment
    */
-  static delete (name: string) {
+  static delete(name: string) {
     // Delete the environment's files/folders
     const path = new Environment(name, false).path()
-    if (!fs.existsSync(path)) throw new Error(`Environment "${name}" does not exist.`)
+    if (!fs.existsSync(path))
+      throw new Error(`Environment "${name}" does not exist.`)
     fs.removeSync(path)
   }
 
   /**
    * List the environments on this machine
    */
-  static async envs (): Promise<Array<any>> {
-    const names = glob.sync('*.yaml', { cwd: Environment.home() }).map(file => file.slice(0, -5))
+  static async envs(): Promise<Array<any>> {
+    const names = glob
+      .sync('*.yaml', { cwd: Environment.home() })
+      .map((file) => file.slice(0, -5))
     const envs = []
-    for (let name of names) {
+    for (const name of names) {
       const env = new Environment(name)
       const built = await env.built()
-      envs.push(Object.assign({}, env, {
-        path: env.path(),
-        built: built,
-        location: built ? nix.location(name) : '-'
-      }))
+      envs.push(
+        Object.assign({}, env, {
+          path: env.path(),
+          built: built,
+          location: built ? nix.location(name) : '-',
+        })
+      )
     }
     return envs
   }
@@ -255,13 +274,13 @@ export default class Environment {
    *
    * @param long Should a long description be provided?
    */
-  async show (long: boolean = false): Promise<any> {
+  async show(long = false): Promise<any> {
     this.read()
 
     const desc: any = Object.assign({}, this, {
       path: this.path(),
       location: nix.location(this.name),
-      packages: await nix.packages(this.name)
+      packages: await nix.packages(this.name),
     })
 
     if (long) {
@@ -274,17 +293,19 @@ export default class Environment {
   /**
    * List the packages installed in the environment
    */
-  pkgs (): Array<string> {
+  pkgs(): Array<string> {
     let pkgs: Array<string> = []
     if (this.extends) {
-      for (let env of this.extends) {
+      for (const env of this.extends) {
         let base: Environment
         try {
           base = new Environment(env)
           pkgs = pkgs.concat(base.pkgs())
         } catch (err) {
           if (err.code === 'ENOENT') {
-            throw new Error(`Unable to find base environment "${env}" at "${err.path}"`)
+            throw new Error(
+              `Unable to find base environment "${env}" at "${err.path}"`
+            )
           }
         }
       }
@@ -293,8 +314,8 @@ export default class Environment {
       pkgs = pkgs.concat(this.adds)
     }
     if (this.removes) {
-      for (let pkg of this.removes) {
-        let index = pkgs.indexOf(pkg)
+      for (const pkg of this.removes) {
+        const index = pkgs.indexOf(pkg)
         if (index > -1) {
           pkgs.slice(index, 1)
         }
@@ -308,11 +329,11 @@ export default class Environment {
    *
    * @param pkgs The names of the package to add
    */
-  async add (pkgs: Array<string>): Promise<Environment> {
+  async add(pkgs: Array<string>): Promise<Environment> {
     if (this.removes) {
       for (let index = 0; index < pkgs.length; index++) {
-        let pkg = pkgs[index]
-        let removesIndex = this.removes.indexOf(pkg)
+        const pkg = pkgs[index]
+        const removesIndex = this.removes.indexOf(pkg)
         if (removesIndex > -1) {
           this.removes.splice(removesIndex, 1)
           pkgs.splice(index, 1)
@@ -323,7 +344,7 @@ export default class Environment {
     if (!this.adds) {
       this.adds = pkgs
     } else {
-      for (let pkg of pkgs) {
+      for (const pkg of pkgs) {
         if (this.adds.indexOf(pkg) < 0) {
           this.adds.push(pkg)
         }
@@ -338,11 +359,11 @@ export default class Environment {
    *
    * @param pkg The names of the package to remove
    */
-  async remove (pkgs: Array<string>): Promise<Environment> {
+  async remove(pkgs: Array<string>): Promise<Environment> {
     if (this.adds) {
       for (let index = 0; index < pkgs.length; index++) {
-        let pkg = pkgs[index]
-        let addsIndex = this.adds.indexOf(pkg)
+        const pkg = pkgs[index]
+        const addsIndex = this.adds.indexOf(pkg)
         if (addsIndex > -1) {
           this.adds.splice(addsIndex, 1)
           pkgs.splice(index, 1)
@@ -354,7 +375,7 @@ export default class Environment {
       if (!this.removes) {
         this.removes = pkgs
       } else {
-        for (let pkg of pkgs) {
+        for (const pkg of pkgs) {
           if (this.removes.indexOf(pkg) < 0) {
             this.removes.push(pkg)
           }
@@ -370,13 +391,13 @@ export default class Environment {
    *
    * @param docker Also build a Docker container for the environment?
    */
-  async build (store?: string, docker: boolean = false): Promise<Environment> {
+  async build(store?: string, docker = false): Promise<Environment> {
     await nix.install(this.name, this.pkgs(), true, store)
 
     if (docker) {
       // TODO: complete implementation of this, using these files...
       const requisites = await nix.requisites(this.name)
-      const dockerignore = `*\n${requisites.map(req => '!' + req).join('\n')}`
+      const dockerignore = `*\n${requisites.map((req) => '!' + req).join('\n')}`
       console.log(dockerignore)
 
       // The Dockerfile does essentially the same as the `docker run` command
@@ -397,7 +418,7 @@ export default class Environment {
   /**
    * Has this environment been built?
    */
-  async built (): Promise<boolean> {
+  async built(): Promise<boolean> {
     try {
       nix.location(this.name)
       return true
@@ -411,7 +432,7 @@ export default class Environment {
    *
    * @param pkgs A list of packages to upgrade
    */
-  async upgrade (pkgs: Array<string>): Promise<Environment> {
+  async upgrade(pkgs: Array<string>): Promise<Environment> {
     await nix.upgrade(this.name, pkgs)
     return this.write()
   }
@@ -427,7 +448,7 @@ export default class Environment {
    *
    * @param pure Should the shell that this command is executed in be 'pure'?
    */
-  async vars (pure: boolean = false): Promise<{ [key: string]: string }> {
+  async vars(pure = false): Promise<{ [key: string]: string }> {
     const location = nix.location(this.name)
 
     let PATH = `${location}/bin:${location}/sbin`
@@ -437,7 +458,7 @@ export default class Environment {
 
     return {
       PATH,
-      R_LIBS_SITE
+      R_LIBS_SITE,
     }
   }
 
@@ -447,8 +468,9 @@ export default class Environment {
    * @param command The command to execute
    * @param pure Should the shell that this command is executed in be 'pure'?
    */
-  async within (command: string, pure: boolean = false) {
-    if (!this.built()) throw new Error(`Environment "${this.name}" has not be built yet.`)
+  async within(command: string, pure = false) {
+    if (!this.built())
+      throw new Error(`Environment "${this.name}" has not be built yet.`)
 
     // Get the path to bash because it may not be available in
     // the PATH of a pure shell
@@ -456,7 +478,7 @@ export default class Environment {
     shell = shell.toString().trim()
     await spawn(shell, ['-c', command], {
       stdio: 'inherit',
-      env: await this.vars()
+      env: await this.vars(),
     })
   }
 
@@ -466,13 +488,19 @@ export default class Environment {
    * @param sessionParameters SessionParameters that define the container to exec inside and the command to run
    * @param daemonize Should the Docker command be run with the '-d' flag?
    */
-  private getDockerExecCommand (sessionParameters: SessionParameters, daemonize: boolean): Array<string> {
+  private getDockerExecCommand(
+    sessionParameters: SessionParameters,
+    daemonize: boolean
+  ): Array<string> {
     const nixLocation = nix.location(this.name)
     const shellArgs = [
-      'exec', '--tty',
+      'exec',
+      '--tty',
       // Prepend the environment path to the PATH variable
-      '--env', `PATH=${nixLocation}/bin:${nixLocation}/sbin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin`,
-      sessionParameters.containerId, sessionParameters.command
+      '--env',
+      `PATH=${nixLocation}/bin:${nixLocation}/sbin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin`,
+      sessionParameters.containerId,
+      sessionParameters.command,
     ]
 
     if (daemonize) shellArgs.splice(1, 0, '-d')
@@ -486,21 +514,30 @@ export default class Environment {
    * @param sessionParameters SessionParameters to use for limiting Docker's resource usage
    * @param daemonize Should the Docker command be run with the '-d' flag?
    */
-  private getDockerRunCommand (sessionParameters: SessionParameters, daemonize: boolean = false): Array<string> {
+  private getDockerRunCommand(
+    sessionParameters: SessionParameters,
+    daemonize = false
+  ): Array<string> {
     const { command, cpuShares, memoryLimit } = sessionParameters
     const nixLocation = nix.location(this.name)
     let shellArgs = [
-      'run', '--interactive', '--tty', '--rm',
+      'run',
+      '--interactive',
+      '--tty',
+      '--rm',
       // Prepend the environment path to the PATH variable
-      '--env', `PATH=${nixLocation}/bin:${nixLocation}/sbin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin`,
+      '--env',
+      `PATH=${nixLocation}/bin:${nixLocation}/sbin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin`,
       // We also need to tell R where to find libraries
-      '--env', `R_LIBS_SITE=${nixLocation}/library`,
+      '--env',
+      `R_LIBS_SITE=${nixLocation}/library`,
       // Read-only bind mount of the Nix store
-      '--volume', '/nix/store:/nix/store:ro',
+      '--volume',
+      '/nix/store:/nix/store:ro',
       // Apply CPU shares
       `--cpu-shares=${cpuShares}`,
       // Apply memory limit
-      `--memory=${memoryLimit}`
+      `--memory=${memoryLimit}`,
     ]
 
     sessionParameters.mounts.map((mount: ContainerMount) => {
@@ -516,8 +553,8 @@ export default class Environment {
     shellArgs.push('alpine')
 
     return shellArgs.concat(
-        // Command to execute in the container
-        command ? command.split(' ') : DOCKER_DEFAULT_COMMAND
+      // Command to execute in the container
+      command ? command.split(' ') : DOCKER_DEFAULT_COMMAND
     )
   }
 
@@ -526,8 +563,9 @@ export default class Environment {
    *
    * @param sessionParameters Parameters of the session
    */
-  async enter (sessionParameters: SessionParameters) {
-    if (!this.built()) throw new Error(`Environment "${this.name}" has not be built yet.`)
+  async enter(sessionParameters: SessionParameters) {
+    if (!this.built())
+      throw new Error(`Environment "${this.name}" has not be built yet.`)
 
     let { command, platform, pure, stdin, stdout } = sessionParameters
 
@@ -578,7 +616,10 @@ export default class Environment {
       }
       if (nixtaPath) {
         const tempRcFile = tmp.fileSync()
-        fs.writeFileSync(tempRcFile.name, `alias nixta="${nixtaPath.toString().trim()}"\n`)
+        fs.writeFileSync(
+          tempRcFile.name,
+          `alias nixta="${nixtaPath.toString().trim()}"\n`
+        )
         shellArgs.push('--rcfile', tempRcFile.name)
       }
     }
@@ -590,7 +631,7 @@ export default class Environment {
       NIXTA_ENV: this.name,
       // Customise the bash prompt so that the user know that they are in
       // a Nixta environment and which one.
-      PS1: '☆ ' + chalk.green.bold(this.name) + ':' + chalk.blue('\\w') + '$ '
+      PS1: '☆ ' + chalk.green.bold(this.name) + ':' + chalk.blue('\\w') + '$ ',
     })
 
     // Environment variable for Docker
@@ -598,14 +639,23 @@ export default class Environment {
     // In particular, `DOCKER_HOST` is used in deployment to specify the Docker daemon being used.
     // We pass all `DOCKER_` env vars on when Docker is the target platform.
     if (platform === Platform.DOCKER) {
-      for (let name of Object.keys(process.env).filter(name => name.startsWith('DOCKER_'))) {
+      for (const name of Object.keys(process.env).filter((name) =>
+        name.startsWith('DOCKER_')
+      )) {
         vars[name] = process.env[name] || ''
       }
     }
 
-    const shellProcess = this.runInShell(shellPath, shellArgs, vars, stdout, stdin)
+    const shellProcess = this.runInShell(
+      shellPath,
+      shellArgs,
+      vars,
+      stdout,
+      stdin
+    )
 
-    if (platform === Platform.UNIX && command) shellProcess.write(command + '\r')
+    if (platform === Platform.UNIX && command)
+      shellProcess.write(command + '\r')
   }
 
   /**
@@ -617,14 +667,20 @@ export default class Environment {
    * @param stdout Stream
    * @param stdin Stream
    */
-  private runInShell (shellPath: string, shellArgs: Array<string>, environmentVariables: { [key: string]: string }, stdout: stream.Writable, stdin: stream.Readable) {
+  private runInShell(
+    shellPath: string,
+    shellArgs: Array<string>,
+    environmentVariables: { [key: string]: string },
+    stdout: stream.Writable,
+    stdin: stream.Readable
+  ) {
     const shellProcess = pty.spawn(shellPath, shellArgs, {
       name: 'xterm-color',
       cols: 120,
       rows: 30,
-      env: environmentVariables
+      env: environmentVariables,
     })
-    shellProcess.on('data', data => {
+    shellProcess.on('data', (data) => {
       stdout.write(data)
     })
 
@@ -641,7 +697,7 @@ export default class Environment {
     //   - if in the top level shell process then exit this process
     //   - otherwise, pass on the process e.g. node, Rrm
     const ctrlD = Buffer.from([4])
-    stdin.on('data', data => {
+    stdin.on('data', (data) => {
       if (data.equals(ctrlD) && shellProcess.process === shellPath) {
         shellProcess.kill('SIGKILL')
         // @ts-ignore
@@ -657,15 +713,23 @@ export default class Environment {
    *
    * @param sessionParameters The stdout and stdin attributes from here are used to connect to the shell
    */
-  async attach (sessionParameters: SessionParameters) {
+  async attach(sessionParameters: SessionParameters) {
     if (sessionParameters.platform !== Platform.DOCKER) {
       throw new Error('Attach is only valid for docker')
     }
 
     if (!this.containerIsRunning(sessionParameters.containerId)) {
-      throw new Error(`Container ${sessionParameters.containerId} is not running.`)
+      throw new Error(
+        `Container ${sessionParameters.containerId} is not running.`
+      )
     }
-    this.runInShell('docker', ['attach', sessionParameters.containerId], {}, sessionParameters.stdout, sessionParameters.stdin)
+    this.runInShell(
+      'docker',
+      ['attach', sessionParameters.containerId],
+      {},
+      sessionParameters.stdout,
+      sessionParameters.stdin
+    )
   }
 
   /**
@@ -673,14 +737,19 @@ export default class Environment {
    *
    * @param containerId The ID of the container, must be truncated version (12 alphanumeric characters).
    */
-  async containerIsRunning (containerId: string): Promise<boolean> {
+  async containerIsRunning(containerId: string): Promise<boolean> {
     const containerRegex = new RegExp(/^[^_\W]{12}$/)
     if (containerRegex.exec(containerId) === null) {
       throw new Error(`'${containerId}' is not a valid docker container ID.`)
     }
 
     // List running containers that match the containerId we are looking for. There should be only one or zero.
-    const dockerPsProcess = await spawn('docker', ['ps', '-q', '--filter', `id=${containerId}`])
+    const dockerPsProcess = await spawn('docker', [
+      'ps',
+      '-q',
+      '--filter',
+      `id=${containerId}`,
+    ])
     const foundContainerId = dockerPsProcess.toString().trim()
     return foundContainerId === containerId // foundContainerId should be either containerId or an empty string
   }
@@ -691,13 +760,19 @@ export default class Environment {
    *
    * Returns the short ID of the container that is running.
    */
-  async start (sessionParameters: SessionParameters): Promise<string> {
+  async start(sessionParameters: SessionParameters): Promise<string> {
     if (sessionParameters.platform !== Platform.DOCKER) {
       throw new Error('Start is only valid with the Docker platform.')
     }
 
-    const dockerProcess = await spawn('docker', this.getDockerRunCommand(sessionParameters, true))
-    return dockerProcess.toString().trim().substr(0, DOCKER_CONTAINER_ID_SHORT_LENGTH)
+    const dockerProcess = await spawn(
+      'docker',
+      this.getDockerRunCommand(sessionParameters, true)
+    )
+    return dockerProcess
+      .toString()
+      .trim()
+      .substr(0, DOCKER_CONTAINER_ID_SHORT_LENGTH)
   }
 
   /**
@@ -707,16 +782,24 @@ export default class Environment {
    * @param sessionParameters Contains the `containerId` and `command` that define where and what to execute
    * @param daemonize run the command in the background (pass -d flag to docker)
    */
-  async execute (sessionParameters: SessionParameters, daemonize: boolean = false): Promise<string> {
+  async execute(
+    sessionParameters: SessionParameters,
+    daemonize = false
+  ): Promise<string> {
     if (sessionParameters.platform !== Platform.DOCKER) {
       throw new Error('Execute is only valid with the Docker platform.')
     }
 
     if (!this.containerIsRunning(sessionParameters.containerId)) {
-      throw new Error(`Container ${sessionParameters.containerId} is not running`)
+      throw new Error(
+        `Container ${sessionParameters.containerId} is not running`
+      )
     }
 
-    const dockerProcess = await spawn('docker', this.getDockerExecCommand(sessionParameters, daemonize))
+    const dockerProcess = await spawn(
+      'docker',
+      this.getDockerExecCommand(sessionParameters, daemonize)
+    )
     return dockerProcess.toString().trim()
   }
 
@@ -725,17 +808,23 @@ export default class Environment {
    *
    * @param containerId
    */
-  async stopContainer (containerId: string): Promise<boolean> {
+  async stopContainer(containerId: string): Promise<boolean> {
     const dockerStopProcess = await spawn('docker', ['stop', containerId])
-    return dockerStopProcess.toString().trim().substr(0, DOCKER_CONTAINER_ID_SHORT_LENGTH) === containerId.substr(0, DOCKER_CONTAINER_ID_SHORT_LENGTH)
+    return (
+      dockerStopProcess
+        .toString()
+        .trim()
+        .substr(0, DOCKER_CONTAINER_ID_SHORT_LENGTH) ===
+      containerId.substr(0, DOCKER_CONTAINER_ID_SHORT_LENGTH)
+    )
   }
 
   /**
    * Build a Docker container for this environment
    */
-  async dockerBuild () {
+  async dockerBuild() {
     const requisites = await nix.requisites(this.name)
-    const dockerignore = `*\n${requisites.map(req => '!' + req).join('\n')}`
+    const dockerignore = `*\n${requisites.map((req) => '!' + req).join('\n')}`
     console.log(dockerignore)
 
     // The Dockerfile does essentially the same as the `docker run` command

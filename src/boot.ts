@@ -18,11 +18,12 @@ import path from 'path'
 import fs from 'fs-extra'
 import tar from 'tar'
 
-export const packaged = (
-  process.mainModule && process.mainModule.id.endsWith('.exe') || process.hasOwnProperty('pkg')
-) && fs.existsSync(path.join('/', 'snapshot'))
+export const packaged =
+  process.hasOwnProperty('pkg') && fs.existsSync(path.join('/', 'snapshot'))
 
-export const home = packaged ? path.dirname(process.execPath) : path.dirname(__dirname)
+export const home = packaged
+  ? path.dirname(process.execPath)
+  : path.dirname(__dirname)
 
 if (packaged && !fs.existsSync(path.join(home, 'node_modules'))) {
   tar.x({

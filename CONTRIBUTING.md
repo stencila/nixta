@@ -7,29 +7,29 @@
 <!-- toc -->
 
 - [Defining environments](#defining-environments)
-  * [Changing the packages in an existing community environment](#changing-the-packages-in-an-existing-community-environment)
-    + [Use `nixta`](#use-nixta)
-    + [Use a text editor](#use-a-text-editor)
-    + [Use Github editor](#use-github-editor)
-  * [Creating a new community environment](#creating-a-new-community-environment)
+  - [Changing the packages in an existing community environment](#changing-the-packages-in-an-existing-community-environment)
+    - [Use `nixta`](#use-nixta)
+    - [Use a text editor](#use-a-text-editor)
+    - [Use Github editor](#use-github-editor)
+  - [Creating a new community environment](#creating-a-new-community-environment)
 - [Building environments](#building-environments)
 - [Server testing and deployment](#server-testing-and-deployment)
-  * [Local development](#local-development)
-  * [Local `dist` testing](#local-dist-testing)
-  * [Local `build` testing](#local-build-testing)
-  * [Local Docker container testing](#local-docker-container-testing)
-  * [Local container orchestration testing](#local-container-orchestration-testing)
-  * [Local Kubernetes cluster testing](#local-kubernetes-cluster-testing)
-    + [Getting started](#getting-started)
-    + [Create a persistent volume](#create-a-persistent-volume)
-    + [Build an environment](#build-an-environment)
-    + [Serve the environment](#serve-the-environment)
-    + [Shutting down](#shutting-down)
+  - [Local development](#local-development)
+  - [Local `dist` testing](#local-dist-testing)
+  - [Local `build` testing](#local-build-testing)
+  - [Local Docker container testing](#local-docker-container-testing)
+  - [Local container orchestration testing](#local-container-orchestration-testing)
+  - [Local Kubernetes cluster testing](#local-kubernetes-cluster-testing)
+    - [Getting started](#getting-started)
+    - [Create a persistent volume](#create-a-persistent-volume)
+    - [Build an environment](#build-an-environment)
+    - [Serve the environment](#serve-the-environment)
+    - [Shutting down](#shutting-down)
 - [Updating the package distribution](#updating-the-package-distribution)
-  * [How to add R packages](#how-to-add-r-packages)
-  * [How to add Node.js packages](#how-to-add-nodejs-packages)
-  * [How to add Python packages](#how-to-add-python-packages)
-  * [How to change the pinned version of upstream `nixpkgs`](#how-to-change-the-pinned-version-of-upstream-nixpkgs)
+  - [How to add R packages](#how-to-add-r-packages)
+  - [How to add Node.js packages](#how-to-add-nodejs-packages)
+  - [How to add Python packages](#how-to-add-python-packages)
+  - [How to change the pinned version of upstream `nixpkgs`](#how-to-change-the-pinned-version-of-upstream-nixpkgs)
 
 <!-- tocstop -->
 
@@ -113,8 +113,7 @@ During development, you'll usually want to have some Nixta environments already 
 nixta build multi-mega
 ```
 
-Nixta will by default, tell Nix to put built packages in `/nix/store` and the environment 'profile' in `/nix/profiles`.  Nixta allows you to build into a different directory by using the `--store` option. The `make docker-build` recipe uses this option to build into the local `./nixroot` directory which can be later mounted into the server container (see below). 
-
+Nixta will by default, tell Nix to put built packages in `/nix/store` and the environment 'profile' in `/nix/profiles`. Nixta allows you to build into a different directory by using the `--store` option. The `make docker-build` recipe uses this option to build into the local `./nixroot` directory which can be later mounted into the server container (see below).
 
 ## Server testing and deployment
 
@@ -275,7 +274,7 @@ minikube stop
 
 ## Updating the package distribution
 
-*Note*: these instructions are for developers to add new Nix package definitions to the distribution, not for users to add new packages to an environment (for which you simple use `nixta add --to <env> <pkg>`)
+_Note_: these instructions are for developers to add new Nix package definitions to the distribution, not for users to add new packages to an environment (for which you simple use `nixta add --to <env> <pkg>`)
 
 ### How to add R packages
 

@@ -10,12 +10,12 @@ jest.setTimeout(30 * 60 * 1000)
 import Environment from '../src/Environment'
 Environment.home(path.join(__dirname, 'fixtures', 'envs'))
 
-test('add', async () => {
+test.skip('add', async () => {
   const env = new Environment('empty')
 
   expect(env.adds).toBeUndefined()
   expect(env.pkgs()).toEqual([])
-  
+
   await env.add(['hello'])
   expect(env.adds).toEqual(['hello'])
   expect(env.pkgs()).toEqual(['hello'])
@@ -25,9 +25,9 @@ test('add', async () => {
   expect(env.pkgs()).toEqual(['hello', 'cowsay', 'jq'])
 })
 
-test('remove', async () => {
+test.skip('remove', async () => {
   const env = new Environment('empty')
-  
+
   await env.add(['hello', 'cowsay', 'jq'])
   expect(env.adds).toEqual(['hello', 'cowsay', 'jq'])
   expect(env.removes).toBeUndefined()

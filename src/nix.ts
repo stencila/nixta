@@ -16,9 +16,17 @@ import spawn from './spawn'
  *
  * @param version The version string
  */
-export function semver (version: string): string {
-  let match = version.match(/^(\d+)(\.(\d+))?(\.(\d+))?(.*)?/)
-  return match ? sprintf('%05i.%05i.%05i%s', match[1], match[3] || 0, match[5] || 0, match[6] || '') : version
+export function semver(version: string): string {
+  const match = version.match(/^(\d+)(\.(\d+))?(\.(\d+))?(.*)?/)
+  return match
+    ? sprintf(
+        '%05i.%05i.%05i%s',
+        match[1],
+        match[3] || 0,
+        match[5] || 0,
+        match[6] || ''
+      )
+    : version
 }
 
 // Register function in the database
@@ -41,7 +49,10 @@ const profiles = path.join('/', 'nix', 'profiles')
  *
  * See the list of NixOS channels at: https://nixos.org/channels/
  */
-export async function channel (url: string = 'https://nixos.org/channels/nixpkgs-unstable', name: string = 'nixpkgs-unstable') {
+export async function channel(
+  url = 'https://nixos.org/channels/nixpkgs-unstable',
+  name = 'nixpkgs-unstable'
+) {
   // Update the channel
   // nix-channel --add url [name] : Adds a channel named name with URL url to the list of subscribed channels
   await spawn('nix-channel', ['--add', url, name])
@@ -57,44 +68,56 @@ export async function channel (url: string = 'https://nixos.org/channels/nixpkgs
 /**
  * Rules for packages that should be skipped during `update()`
  */
-const SKIP = [
-  { attr: /^rWrapper$/ }
-]
+const SKIP = [{ attr: /^rWrapper$/ }]
 
 /**
  * Update the Nixta database
  */
-export async function update (channels: string | Array<string> = [], last: boolean = true) {
+export async function update(
+  channels: string | Array<string> = [],
+  last = true
+) {
   if (Array.isArray(channels)) {
     if (channels.length === 0) {
       channels = [
         // TODO this should come from `nix-channel --list`
         'nixpkgs-unstable',
-        'nixos-18.09', 'nixos-18.03',
-        'nixos-17.09', 'nixos-17.03',
-        'nixos-16.09', 'nixos-16.03',
-        'nixos-15.09'
+        'nixos-18.09',
+        'nixos-18.03',
+        'nixos-17.09',
+        'nixos-17.03',
+        'nixos-16.09',
+        'nixos-16.03',
+        'nixos-15.09',
       ]
     }
-    for (let item of channels) await update(item, channels.indexOf(item) === channels.length - 1)
+    for (const item of channels)
+      await update(item, channels.indexOf(item) === channels.length - 1)
     return
   }
 
-  let channel = channels
+  const channel = channels
 
   // Get list of available packages in the channel and put them in the database
   console.log(`Querying channel ${channel} for available packages`)
-  let pkgs: any = {}
-  const args = ['--query', `--file`, `channel:${channel}`, '--available', '--meta', '--json']
+  const pkgs: any = {}
+  const args = [
+    '--query',
+    `--file`,
+    `channel:${channel}`,
+    '--available',
+    '--meta',
+    '--json',
+  ]
   // For some reason, in order to get R packages it is necessary to explicitly use --attr rPackages
   // so we have a loop for that case and potential others
-  for (let extraArgs of [
+  for (const extraArgs of [
     [],
     ['--attr', 'rPackages'],
-    ['--attr', 'haskellPackages']
+    ['--attr', 'haskellPackages'],
   ]) {
-    let allArgs = args.concat(extraArgs)
-    let json = await spawn('nix-env', allArgs)
+    const allArgs = args.concat(extraArgs)
+    const json = await spawn('nix-env', allArgs)
     let newPkgs
     try {
       newPkgs = JSON.parse(json)
@@ -103,7 +126,9 @@ export async function update (channels: string | Array<string> = [], last: boole
     }
     Object.assign(pkgs, newPkgs)
   }
-  console.log(`Obtained list of ${Object.keys(pkgs).length} for channel ${channel}`)
+  console.log(
+    `Obtained list of ${Object.keys(pkgs).length} for channel ${channel}`
+  )
 
   console.log(`Updating database with package data`)
   const insert = db.prepare(`
@@ -111,12 +136,12 @@ export async function update (channels: string | Array<string> = [], last: boole
     VALUES (@type, @name, @version, @runtime, @channel, @attr, @fullname, @priority, @description, @meta)
   `)
   db.transaction(() => {
-    for (let attr of Object.keys(pkgs)) {
+    for (const attr of Object.keys(pkgs)) {
       const pkg = pkgs[attr]
 
       // We ignore some packages that
       let skip = false
-      for (let spec of SKIP) {
+      for (const spec of SKIP) {
         if (spec.attr && attr.match(spec.attr)) {
           skip = true
           break
@@ -124,10 +149,10 @@ export async function update (channels: string | Array<string> = [], last: boole
       }
       if (skip) continue
 
-      let type: string = ''
+      let type = ''
       let name: string
-      let version: string = ''
-      let runtime: string = ''
+      let version = ''
+      let runtime = ''
       const match = pkg.name.match(/(.+?)-(\d.*)$/)
       if (match) {
         name = match[1]
@@ -190,7 +215,7 @@ export async function update (channels: string | Array<string> = [], last: boole
         fullname: pkg.name,
         priority: pkg.meta.priority || 0,
         description: pkg.meta.description,
-        meta: JSON.stringify(pkg.meta)
+        meta: JSON.stringify(pkg.meta),
       })
     }
   })()
@@ -209,8 +234,8 @@ export async function update (channels: string | Array<string> = [], last: boole
  * @param pkg Package name/version e.g. r-ggplot2, r-ggplot==3.1.0
  * @returns An array of matching packages
  */
-export async function match (pkg: string): Promise<Array<any>> {
-  let [name, version] = pkg.split('==')
+export async function match(pkg: string): Promise<Array<any>> {
+  const [name, version] = pkg.split('==')
   let sql = `
     SELECT name, version, channel, description, attr
     FROM packages
@@ -229,8 +254,12 @@ export async function match (pkg: string): Promise<Array<any>> {
  * @param type Type of package e.g. `r-package`
  * @param limit Limit on number of packages to return
  */
-export async function search (term: string, type: string = '', limit: number = 1000): Promise<Array<any>> {
-  term = term.replace('\'', '\'')
+export async function search(
+  term: string,
+  type = '',
+  limit = 1000
+): Promise<Array<any>> {
+  term = term.replace("'", "'")
   // TODO: find a way to show the channel and description for the latest
   // version
   const stmt = db.prepare(`
@@ -257,7 +286,7 @@ export async function search (term: string, type: string = '', limit: number = 1
  *
  * @param table The table to dump
  */
-export async function dump (table: string): Promise<Array<any>> {
+export async function dump(table: string): Promise<Array<any>> {
   let stmt
   if (table === 'packages') {
     stmt = db.prepare(`
@@ -280,11 +309,17 @@ export async function dump (table: string): Promise<Array<any>> {
  * @param env The environment name
  * @returns The path to the environment's directory in the Nix store.
  */
-export function location (env: string): string {
+export function location(env: string): string {
   const profile = path.join(profiles, env)
-  if (!fs.existsSync(profile)) throw new Error(`Profile for environment "${env}" does not exist at "${profile}"`)
+  if (!fs.existsSync(profile))
+    throw new Error(
+      `Profile for environment "${env}" does not exist at "${profile}"`
+    )
   const location = fs.realpathSync(profile)
-  if (location.length === 0) throw new Error(`Could not resolve location of environment "${env}" from the profile "${profile}"`)
+  if (location.length === 0)
+    throw new Error(
+      `Could not resolve location of environment "${env}" from the profile "${profile}"`
+    )
   return location
 }
 
@@ -294,10 +329,15 @@ export function location (env: string): string {
  * @param env The environment name
  * @param pkgs An array of normalized package names
  */
-export async function install (env: string, pkgs: Array<string>, clean: boolean = false, store?: string) {
-  let channels: { [key: string]: any } = {}
-  for (let pkg of pkgs) {
-    let matches = await match(pkg)
+export async function install(
+  env: string,
+  pkgs: Array<string>,
+  clean = false,
+  store?: string
+) {
+  const channels: { [key: string]: any } = {}
+  for (const pkg of pkgs) {
+    const matches = await match(pkg)
     if (matches.length === 0) {
       const err: any = new Error(`No package matches "${pkg}"`)
       err.code = 'ENOMATCH'
@@ -310,14 +350,14 @@ export async function install (env: string, pkgs: Array<string>, clean: boolean 
   }
 
   if (Object.keys(channels).length > 1) {
-    console.error('Warning: installing packages from more than one channel into the same environment.\n', channels)
+    console.error(
+      'Warning: installing packages from more than one channel into the same environment.\n',
+      channels
+    )
   }
 
-  for (let channel in channels) {
-    let args = [
-      '--install',
-      '--file', `channel:${channel}`
-    ]
+  for (const channel in channels) {
+    let args = ['--install', '--file', `channel:${channel}`]
     if (clean) args = args.concat('--remove-all')
     let profile
     if (store) {
@@ -332,12 +372,14 @@ export async function install (env: string, pkgs: Array<string>, clean: boolean 
     // Ensure the profiles directory is present
     fs.ensureDirSync(path.dirname(profile))
     args = args.concat(
-      '--profile', profile,
-      '--attr', channels[channel].map((pkg: any) => pkg.attr)
+      '--profile',
+      profile,
+      '--attr',
+      channels[channel].map((pkg: any) => pkg.attr)
     )
 
     await spawn('nix-env', args, {
-      stdio: 'inherit'
+      stdio: 'inherit',
     })
   }
 }
@@ -348,15 +390,21 @@ export async function install (env: string, pkgs: Array<string>, clean: boolean 
  * @param env The environment name
  * @param pkgs A list of packages to upgrade
  */
-export async function upgrade (env: string, pkgs: Array<string>) {
-  await spawn('nix-env', [
-    '--upgrade',
-    '--file', `channel:nixpkgs-unstable`,
-    '--profile', path.join(profiles, env),
-    '--attr'
-  ].concat(attrs(pkgs)), {
-    stdio: 'inherit'
-  })
+export async function upgrade(env: string, pkgs: Array<string>) {
+  await spawn(
+    'nix-env',
+    [
+      '--upgrade',
+      '--file',
+      `channel:nixpkgs-unstable`,
+      '--profile',
+      path.join(profiles, env),
+      '--attr',
+    ].concat(attrs(pkgs)),
+    {
+      stdio: 'inherit',
+    }
+  )
 }
 
 /**
@@ -365,13 +413,14 @@ export async function upgrade (env: string, pkgs: Array<string>) {
  * @param env The environment name
  * @param pkgs A list of packages to uninstall
  */
-export async function uninstall (env: string, pkgs: Array<string>) {
-  await spawn('nix-env', [
-    '--uninstall',
-    '--profile', path.join(profiles, env)
-  ].concat(names(pkgs)), {
-    stdio: 'inherit'
-  })
+export async function uninstall(env: string, pkgs: Array<string>) {
+  await spawn(
+    'nix-env',
+    ['--uninstall', '--profile', path.join(profiles, env)].concat(names(pkgs)),
+    {
+      stdio: 'inherit',
+    }
+  )
 }
 
 /**
@@ -379,17 +428,18 @@ export async function uninstall (env: string, pkgs: Array<string>) {
  *
  * @param env The environment name
  */
-export async function packages (env: string): Promise<any> {
+export async function packages(env: string): Promise<any> {
   const query = await spawn('nix-env', [
     '--query',
     '--installed',
-    '--profile', path.join(profiles, env),
-    '--out-path'
+    '--profile',
+    path.join(profiles, env),
+    '--out-path',
   ])
   const list = query.toString().trim()
-  let pkgs: any = {}
-  for (let pkg of (list.length ? list.split('\n') : [])) {
-    let [name, path] = pkg.split(/ +/)
+  const pkgs: any = {}
+  for (const pkg of list.length ? list.split('\n') : []) {
+    const [name, path] = pkg.split(/ +/)
     pkgs[name] = path
   }
   return pkgs
@@ -400,11 +450,11 @@ export async function packages (env: string): Promise<any> {
  *
  * @param env The environment name
  */
-export async function requisites (env: string): Promise<Array<any>> {
+export async function requisites(env: string): Promise<Array<any>> {
   const query = await spawn('nix-store', [
     '--query',
     '--requisites',
-    location(env)
+    location(env),
   ])
   const list = query.toString().trim()
   return list.length ? list.split('\n') : []
@@ -415,15 +465,17 @@ export async function requisites (env: string): Promise<Array<any>> {
  *
  * @param pkgs A list of package names
  */
-function attrs (pkgs: Array<string>): Array<string> {
+function attrs(pkgs: Array<string>): Array<string> {
   // Installing using Nix attribute paths (i.e. the `--attr` option rather than names)
   // seems to be much faster. Currently we take the package with the highest Nix priority
   // (define in the package meta) but we should also take into account the package version
   // and warn users when more than one? Would also b good to do suggestions is no exact match
   // is found.
   const attrs = []
-  for (let pkg of pkgs) {
-    const stmt = db.prepare('SELECT attr FROM packages WHERE name == ? ORDER BY priority DESC LIMIT 1')
+  for (const pkg of pkgs) {
+    const stmt = db.prepare(
+      'SELECT attr FROM packages WHERE name == ? ORDER BY priority DESC LIMIT 1'
+    )
     const attr = stmt.pluck().get(pkg)
     if (!attr) throw new Error(`No package with name "${pkg}"`)
     attrs.push(attr)
@@ -436,10 +488,12 @@ function attrs (pkgs: Array<string>): Array<string> {
  *
  * @param pkgs A list of package names
  */
-function names (pkgs: Array<string>): Array<string> {
+function names(pkgs: Array<string>): Array<string> {
   const name = []
-  for (let pkg of pkgs) {
-    const stmt = db.prepare('SELECT fullname FROM packages WHERE name == ? ORDER BY priority DESC LIMIT 1')
+  for (const pkg of pkgs) {
+    const stmt = db.prepare(
+      'SELECT fullname FROM packages WHERE name == ? ORDER BY priority DESC LIMIT 1'
+    )
     const attr = stmt.pluck().get(pkg)
     if (!attr) throw new Error(`No package with name "${pkg}"`)
     name.push(attr)

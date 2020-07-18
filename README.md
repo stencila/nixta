@@ -1,4 +1,5 @@
 ## 📦 Nixta
+
 ### A package manager based on Nix
 
 [![Build status](https://travis-ci.org/stencila/nixta.svg?branch=master)](https://travis-ci.org/stencila/nixta)
@@ -6,7 +7,7 @@
 [![Docs](https://img.shields.io/badge/docs-latest-blue.svg)](https://stencila.github.io/nixta/)
 [![Chat](https://badges.gitter.im/stencila/stencila.svg)](https://gitter.im/stencila/stencila)
 
-[Nix](https://nixos.org/nix/) is a superbly well designed and powerful cross-platform package manager. But it's also got a very steep learning curve. Even for experienced programmers it can be daunting to use. 
+[Nix](https://nixos.org/nix/) is a superbly well designed and powerful cross-platform package manager. But it's also got a very steep learning curve. Even for experienced programmers it can be daunting to use.
 
 Nixta is a thin, sugary wrapper around Nix to make it sweeter to use 🍭! It takes a JSON (or YAML) definition of a reproducible computing [`Environment`](https://stencila.github.io/schema/Environment) and builds a Nix environment for it.
 
@@ -17,11 +18,11 @@ Nixta is a thin, sugary wrapper around Nix to make it sweeter to use 🍭! It ta
 - [Status](#status)
 - [Demo](#demo)
 - [Install](#install)
-  * [Command line tool](#command-line-tool)
-    + [Linux](#linux)
-    + [MacOS and Windows](#macos-and-windows)
-  * [Node package](#node-package)
-  * [Docker image](#docker-image)
+  - [Command line tool](#command-line-tool)
+    - [Linux](#linux)
+    - [MacOS and Windows](#macos-and-windows)
+  - [Node package](#node-package)
+  - [Docker image](#docker-image)
 
 <!-- tocstop -->
 
@@ -34,7 +35,6 @@ Nixta is a thin, sugary wrapper around Nix to make it sweeter to use 🍭! It ta
 <a href="https://asciinema.org/a/KD0z367VL5mBNknueUpqzVGMP?size=medium&cols=120&autoplay=1" target="_blank"><img src="https://asciinema.org/a/KD0z367VL5mBNknueUpqzVGMP.svg" /></a>
 
 > Note: This demo uses the previous name for this tool, "Nixster".
-
 
 ## Install
 
