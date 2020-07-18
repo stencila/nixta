@@ -59,12 +59,13 @@ deploy:
       branch: master
 
   # Do a semantic release (only on Linux)
-  - provider: script
-    skip_cleanup: true
-    script: npx semantic-release
-    on:
-      branch: master
-      condition: $TRAVIS_OS_NAME = linux
+  # Temporarily skipping until refactoring complete
+  #- provider: script
+  #  skip_cleanup: true
+  #  script: npx semantic-release
+  #  on:
+  #    branch: master
+  #    condition: $TRAVIS_OS_NAME = linux
 
   # Deploy build artifacts to Github release
   # page on *any* tag (including those generated for a semantic release)
