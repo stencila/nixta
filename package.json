@@ -2,33 +2,26 @@
   "name": "@stencila/nixta",
   "version": "0.1.2",
   "description": "A package manager based on Nix",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "bin": {
-    "nixta": "./dist/cli.js"
-  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": "./dist/cli.js",
   "scripts": {
-    "lint": "tslint --project tsconfig.json --fix --format stylish ./src/**/*.ts",
+    "format": "npx prettier --write './**/*.{js,json,md,ts,yaml}'",
     "test": "jest",
-    "check": "npm run build:dist && npm run check:deps-used && npm run check:deps-unused",
-    "check:deps-used": "dependency-check --entry dist/serve.js .",
-    "check:deps-unused": "dependency-check --extra --no-dev --entry dist/serve.js .",
+    "lint": "eslint 'src/**/*.{ts,js}' --fix",
     "cover": "jest --collectCoverage",
     "build": "npm run build:dist && npm run build:tgz && npm run build:bins",
-    "build:dist": "tsc && cp -Rv src/static/. dist/static/",
-    "build:tgz": "tar czf nixta-deps.tgz envs node_modules/better-sqlite3 node_modules/integer node_modules/node-pty",
+    "build:dist": "tsc",
+    "build:tgz": "tar czf nixta-deps.tgz envs node_modules/better-sqlite3 node_modules/node-pty",
     "build:bins": "pkg --target=host -o=bin/nixta .",
     "bundle:linux": "tar -czvf bin/nixta-linux-x64.tar.gz -C bin nixta",
     "bundle:osx": "tar -czvf bin/nixta-macos-x64.tar.gz -C bin nixta",
     "docs": "npm run docs:readme && npm run docs:contrib && typedoc --readme README.md --mode file --out ./docs ./src",
     "docs:readme": "markdown-toc -i --maxdepth=4 README.md",
-    "docs:contrib": "markdown-toc -i --maxdepth=4 CONTRIBUTING.md",
-    "serve:dev": "ts-node-dev src/cli.ts serve",
-    "serve:dist": "node dist/cli.js serve"
+    "docs:contrib": "markdown-toc -i --maxdepth=4 CONTRIBUTING.md"
   },
   "pkg": {
     "assets": [
-      "./dist/static/**/*",
       "./nixta-deps.tgz"
     ]
   },
@@ -50,72 +43,80 @@
   },
   "homepage": "https://github.com/stencila/nixta#readme",
   "devDependencies": {
-    "@semantic-release/commit-analyzer": "^6.1.0",
-    "@semantic-release/git": "^7.0.8",
-    "@semantic-release/github": "^5.2.10",
-    "@semantic-release/npm": "^5.1.9",
-    "@semantic-release/release-notes-generator": "^7.1.4",
-    "@types/better-sqlite3": "^5.4.0",
-    "@types/express": "^4.16.0",
-    "@types/express-ws": "^3.0.0",
-    "@types/jest": "^24.0.13",
-    "@types/js-yaml": "^3.12.1",
-    "@types/sprintf-js": "^1.1.2",
-    "@types/stream-to-promise": "^2.2.0",
-    "@types/tar": "^4.0.0",
-    "@types/tmp": "0.1.0",
-    "@types/yargs": "^13.0.0",
-    "all-contributors-cli": "^6.4.0",
-    "depcheck": "^0.8.0",
-    "dependency-check": "^3.3.0",
-    "jest": "^24.8.0",
-    "markdown-toc": "^1.2.0",
-    "pkg": "^4.4.0",
-    "semantic-release": "^15.13.12",
-    "ts-jest": "^24.0.2",
-    "ts-node": "^8.1.0",
-    "ts-node-dev": "^1.0.0-pre.39",
-    "tslint": "^5.16.0",
-    "tslint-config-standard": "^8.0.1",
-    "typedoc": "^0.14.0",
-    "typescript": "^3.4.5"
+    "@stencila/dev-config": "^1.4.57",
+    "@types/better-sqlite3": "5.4.0",
+    "@types/fs-extra": "9.0.1",
+    "@types/jest": "26.0.4",
+    "@types/js-yaml": "3.12.5",
+    "@types/node": "14.0.13",
+    "@types/sprintf-js": "1.1.2",
+    "@types/tar": "4.0.3",
+    "@types/tmp": "0.2.0",
+    "@types/yargs": "15.0.5",
+    "jest": "26.1.0",
+    "markdown-toc": "1.2.0",
+    "pkg": "4.4.9",
+    "ts-jest": "26.1.0",
+    "ts-node": "8.10.2",
+    "typedoc": "0.17.7",
+    "typescript": "3.9.5"
   },
   "dependencies": {
-    "await-spawn": "^2.1.2",
-    "better-sqlite3": "^5.2.1",
-    "body-parser": "^1.19.0",
-    "chalk": "^2.4.2",
+    "await-spawn": "^3.0.0",
+    "better-sqlite3": "^7.1.0",
+    "chalk": "^4.1.0",
     "ellipsize": "^0.1.0",
-    "express": "^4.16.4",
-    "express-async-handler": "^1.1.4",
-    "express-jwt": "^5.3.1",
-    "express-ws": "^4.0.0",
-    "fs-extra": "^8.0.1",
-    "glob": "^7.1.4",
-    "js-yaml": "^3.13.1",
-    "node-pty": "^0.8.0",
+    "fs-extra": "^9.0.1",
+    "globby": "^11.0.1",
+    "js-yaml": "^3.14.0",
+    "node-pty": "^0.9.0",
     "sprintf-js": "^1.1.2",
-    "tar": "^4.4.8",
-    "tmp": "0.1.0",
-    "yargs": "^13.2.4"
+    "tar": "^6.0.2",
+    "tmp": "0.2.1",
+    "yargs": "^15.4.1"
   },
   "release": {
-    "plugins": [
-      "@semantic-release/commit-analyzer",
-      "@semantic-release/release-notes-generator",
-      [
-        "@semantic-release/npm",
-        {
-          "npmPublish": false
-        }
+    "extends": "@stencila/semantic-release-config"
+  },
+  "commitlint": {
+    "extends": [
+      "@commitlint/config-conventional"
+    ],
+    "rules": {
+      "scope-case": [
+        2,
+        "always",
+        "sentence-case"
       ],
-      [
-        "@semantic-release/git",
-        {
-          "message": "chore(release): ${nextRelease.version}\n\n${nextRelease.notes}"
-        }
-      ],
-      "@semantic-release/github"
+      "subject-case": [
+        2,
+        "always",
+        "sentence-case"
+      ]
+    }
+  },
+  "eslintConfig": {
+    "extends": "@stencila/eslint-config",
+    "rules": {
+      "@typescript-eslint/ban-types": "warn",
+      "@typescript-eslint/no-unsafe-assignment": "warn",
+      "@typescript-eslint/no-unsafe-call": "warn",
+      "@typescript-eslint/no-unsafe-member-access": "warn",
+      "@typescript-eslint/no-unsafe-return": "warn",
+      "@typescript-eslint/restrict-template-expressions": "warn",
+      "@typescript-eslint/strict-boolean-expressions": "warn"
+    }
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "pretty-quick --staged",
+      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
+    }
+  },
+  "prettier": "@stencila/dev-config/prettier-config.json",
+  "renovate": {
+    "extends": [
+      "@stencila"
     ]
   }
 }

@@ -1,6 +1,6 @@
 {
   "extends": "tslint-config-standard",
-  "rules" : {
+  "rules": {
     "completed-docs": true
   }
 }
