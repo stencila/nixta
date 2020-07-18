@@ -1,13 +1,13 @@
-all: setup lint test check build docs
+all: lint test check build docs
 
 setup:
 	npm install
 
+format:
+	npm run format
+
 lint:
 	npm run lint
-
-check:
-	npm run check
 
 test:
 	npm test
@@ -18,9 +18,6 @@ cover:
 build:
 	npm run build
 .PHONY: build
-
-serve:
-	npm run serve:dev
 
 # Build the Docker image
 docker:
@@ -42,15 +39,6 @@ docker-build:
 		--privileged \
 		--volume $$PWD/nixroot:/nixroot \
 		stencila/nixta nixta build multi-mega --store /nixroot
-
-# Run the Nixta server
-docker-serve:
-	docker run --rm --interactive --tty \
-		--volume /var/run/docker.sock:/var/run/docker.sock \
-		--volume $$PWD/nixroot:/nixroot:ro \
-		--publish 3000:3000 \
-		--env JWT_SECRET=notasecret \
-		stencila/nixta nixta serve --address 0.0.0.0
 
 # Interact with the container in a Bash shell. Useful for debugging build errors
 docker-interact:
@@ -75,3 +63,6 @@ demo-upload:
 demo-magic.sh:
 	curl https://raw.githubusercontent.com/paxtonhare/demo-magic/master/demo-magic.sh > demo-magic.sh
 	chmod +x demo.sh
+
+clean:
+	rm -rf bin coverage dist docs nixroot node_modules demo.cast demo-magic.sh
