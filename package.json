@@ -43,7 +43,7 @@
   },
   "homepage": "https://github.com/stencila/nixta#readme",
   "devDependencies": {
-    "@stencila/dev-config": "^1.4.57",
+    "@stencila/dev-config": "1.4.57",
     "@types/better-sqlite3": "5.4.0",
     "@types/fs-extra": "9.0.1",
     "@types/jest": "26.0.4",
