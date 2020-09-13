@@ -62,7 +62,7 @@
     "typescript": "4.0.2"
   },
   "dependencies": {
-    "await-spawn": "^3.0.0",
+    "await-spawn": "^4.0.1",
     "better-sqlite3": "^7.1.0",
     "chalk": "^4.1.0",
     "ellipsize": "^0.1.0",
