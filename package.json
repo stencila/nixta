@@ -63,7 +63,7 @@
   },
   "dependencies": {
     "await-spawn": "^4.0.1",
-    "better-sqlite3": "^7.1.1",
+    "better-sqlite3": "^7.1.2",
     "chalk": "^4.1.0",
     "ellipsize": "^0.1.0",
     "fs-extra": "^9.0.1",
