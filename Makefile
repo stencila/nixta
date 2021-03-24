@@ -1,4 +1,4 @@
-all: lint test check build docs
+all: format lint test check build docs
 
 setup:
 	npm install

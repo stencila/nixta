@@ -188,7 +188,7 @@ export default class Environment {
    */
   read(): Environment {
     const yml = fs.readFileSync(this.path(), 'utf8')
-    const obj = yaml.safeLoad(yml)
+    const obj = yaml.load(yml)
     Object.assign(this, obj)
     return this
   }
@@ -201,7 +201,7 @@ export default class Environment {
     if (this.removes && this.removes.length === 0) this.removes = undefined
 
     fs.ensureDirSync(Environment.home())
-    const yml = yaml.safeDump(this, { skipInvalid: true })
+    const yml = yaml.dump(this, { skipInvalid: true })
     fs.writeFileSync(this.path(), yml)
     return this
   }
@@ -540,7 +540,7 @@ export default class Environment {
       `--memory=${memoryLimit}`,
     ]
 
-    sessionParameters.mounts.map((mount: ContainerMount) => {
+    sessionParameters.mounts.forEach((mount: ContainerMount) => {
       const volumeArgs = containerMountToVolumeArg(mount)
       shellArgs = shellArgs.concat(volumeArgs)
     })
@@ -738,7 +738,7 @@ export default class Environment {
    * @param containerId The ID of the container, must be truncated version (12 alphanumeric characters).
    */
   async containerIsRunning(containerId: string): Promise<boolean> {
-    const containerRegex = new RegExp(/^[^_\W]{12}$/)
+    const containerRegex = /^[^_\W]{12}$/
     if (containerRegex.exec(containerId) === null) {
       throw new Error(`'${containerId}' is not a valid docker container ID.`)
     }
