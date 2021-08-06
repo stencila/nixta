@@ -48,7 +48,7 @@
     "@types/fs-extra": "9.0.12",
     "@types/jest": "26.0.24",
     "@types/js-yaml": "4.0.2",
-    "@types/node": "14.17.6",
+    "@types/node": "14.17.9",
     "@types/sprintf-js": "1.1.2",
     "@types/tar": "4.0.5",
     "@types/tmp": "0.2.1",
@@ -58,7 +58,7 @@
     "pkg": "4.5.1",
     "ts-jest": "26.5.6",
     "ts-node": "9.1.1",
-    "typedoc": "0.21.4",
+    "typedoc": "0.21.5",
     "typescript": "4.3.5"
   },
   "dependencies": {
