@@ -48,7 +48,7 @@
     "@types/fs-extra": "9.0.13",
     "@types/jest": "26.0.24",
     "@types/js-yaml": "4.0.3",
-    "@types/node": "14.17.18",
+    "@types/node": "14.17.19",
     "@types/sprintf-js": "1.1.2",
     "@types/tar": "4.0.5",
     "@types/tmp": "0.2.1",
